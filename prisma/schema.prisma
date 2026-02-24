@@ -131,6 +131,16 @@ model Application {
   @@map("applications")
 }
 
+model SavedScholarship {
+  id            String   @id @default(cuid())
+  userId        String
+  scholarshipId String
+  createdAt     DateTime @default(now())
+
+  @@unique([userId, scholarshipId])
+  @@map("saved_scholarships")
+}
+
 model Document {
   id            String      @id @default(cuid())
   applicationId String

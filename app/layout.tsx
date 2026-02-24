@@ -14,7 +14,7 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: "Mibegnon — Bourses et universités pour les élèves ivoiriens",
+  title: "Mibegnon, Bourses et universités pour les élèves ivoiriens",
   description:
     "Trouve des bourses et des universités dans le monde entier. Gratuit pour tous les élèves de Côte d'Ivoire.",
 };

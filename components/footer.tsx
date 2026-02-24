@@ -11,7 +11,7 @@ export default function Footer() {
             <p className="text-lg font-bold text-[var(--primary)]">Mibegnon</p>
             <p className="mt-2 text-sm text-slate-500 leading-relaxed">
               Des centaines d&apos;opportunités pour chaque élève ivoirien.
-              Gratuit, toujours.
+              Gratuit, toujours. Ça va aller — on est ensemble.
             </p>
           </div>
 

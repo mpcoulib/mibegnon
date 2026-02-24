@@ -49,9 +49,9 @@ export default async function BoursesPage({
         ) : (
           <div className="mt-16 text-center">
             <p className="text-2xl">🔍</p>
-            <p className="mt-3 font-semibold text-slate-700">Aucune bourse trouvée</p>
+            <p className="mt-3 font-semibold text-slate-700">Ijioh ! Aucun résultat dêh...</p>
             <p className="mt-1 text-sm text-slate-500">
-              Essaie de modifier tes filtres ou de changer ta recherche.
+              Essaie de modifier tes filtres ou de changer ta recherche. Ça va aller !
             </p>
           </div>
         )}

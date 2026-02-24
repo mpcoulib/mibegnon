@@ -67,7 +67,7 @@ export default function HomePage() {
         <div className="relative z-10 mx-auto w-full max-w-6xl px-6 py-24">
           <div className="max-w-xl">
             <Badge className="mb-5 bg-[var(--orange)] text-white hover:bg-[var(--orange)] border-0">
-              Gratuit pour tous les élèves ivoiriens
+              Akwaba ! Gratuit pour tous les élèves ivoiriens
             </Badge>
             <h1 className="text-5xl font-bold leading-tight text-white sm:text-6xl">
               Ton avenir <br />
@@ -152,7 +152,7 @@ export default function HomePage() {
                       </Badge>
                       {s.urgent && (
                         <Badge className="bg-[var(--orange)] text-white border-0 text-xs">
-                          Date limite proche
+                          toi tu connais oub!
                         </Badge>
                       )}
                     </div>
@@ -273,6 +273,9 @@ export default function HomePage() {
           <p className="mt-3 text-muted-foreground">
             Rejoins des milliers d&apos;étudiants ivoiriens qui ont déjà trouvé leur bourse
             d&apos;études grâce à Mibegnon.
+          </p>
+          <p className="mt-2 text-sm font-medium text-[var(--primary)]/70 italic">
+            Ça va aller — on est ensemble. 🇨🇮
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             <Button

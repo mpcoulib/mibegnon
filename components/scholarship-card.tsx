@@ -3,6 +3,7 @@ import { MapPin, GraduationCap, CalendarDays } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { SaveButton } from "@/components/save-button";
 import type { Scholarship } from "@/lib/mock-data";
 
 const typeLabel: Record<string, string> = {
@@ -14,9 +15,11 @@ const typeLabel: Record<string, string> = {
 export function ScholarshipCard({
   scholarship: s,
   featured = false,
+  isSaved = false,
 }: {
   scholarship: Scholarship;
   featured?: boolean;
+  isSaved?: boolean;
 }) {
   return (
     <Card
@@ -38,7 +41,7 @@ export function ScholarshipCard({
           </Badge>
           {s.urgent && (
             <Badge className="bg-[var(--orange)] text-white border-0 text-xs">
-              Date limite proche
+              toi tu connais oub!
             </Badge>
           )}
         </div>
