@@ -4,15 +4,48 @@ import { ArrowLeft, MapPin, GraduationCap, CalendarDays, Banknote, ExternalLink,
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { SaveButton } from "@/components/save-button";
-import { scholarships } from "@/lib/mock-data";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 
-const typeLabel: Record<string, string> = {
-  complete: "Bourse complète",
-  partial: "Aide partielle",
-  exchange: "Programme d'échange",
+const levelLabels: Record<string, string> = {
+  BACHELOR: "Licence", MASTER: "Master", DOCTORAT: "Doctorat",
+  FELLOWSHIP: "Fellowship", SECONDARY: "Secondaire",
 };
+
+const countryFlags: Record<string, string> = {
+  "France": "🇫🇷", "Germany": "🇩🇪", "United Kingdom": "🇬🇧", "UK": "🇬🇧",
+  "USA": "🇺🇸", "United States": "🇺🇸", "Canada": "🇨🇦", "Australia": "🇦🇺",
+  "Japan": "🇯🇵", "China": "🇨🇳", "South Korea": "🇰🇷", "Korea": "🇰🇷",
+  "Turkey": "🇹🇷", "Türkiye": "🇹🇷", "Switzerland": "🇨🇭",
+  "Netherlands": "🇳🇱", "Sweden": "🇸🇪", "Norway": "🇳🇴", "Denmark": "🇩🇰",
+  "Belgium": "🇧🇪", "Italy": "🇮🇹", "Spain": "🇪🇸", "Portugal": "🇵🇹",
+  "India": "🇮🇳", "Brazil": "🇧🇷", "South Africa": "🇿🇦",
+  "Nigeria": "🇳🇬", "Ghana": "🇬🇭", "Kenya": "🇰🇪", "Rwanda": "🇷🇼",
+  "Senegal": "🇸🇳", "Côte d'Ivoire": "🇨🇮", "Ivory Coast": "🇨🇮",
+  "Morocco": "🇲🇦", "Egypt": "🇪🇬", "Ethiopia": "🇪🇹", "Cameroon": "🇨🇲",
+  "Saudi Arabia": "🇸🇦", "UAE": "🇦🇪", "Lebanon": "🇱🇧",
+  "Thailand": "🇹🇭", "Malaysia": "🇲🇾", "Singapore": "🇸🇬",
+  "Indonesia": "🇮🇩", "New Zealand": "🇳🇿", "Greece": "🇬🇷",
+  "Azerbaijan": "🇦🇿", "Latvia": "🇱🇻", "Romania": "🇷🇴",
+  "International": "🌍",
+};
+
+function getFlag(country: string): string {
+  return countryFlags[country] ?? "🌍";
+}
+
+function formatDeadline(date: Date | null): string {
+  if (!date) return "Non précisée";
+  return new Date(date).toLocaleDateString("fr-FR", {
+    day: "numeric", month: "long", year: "numeric",
+  });
+}
+
+function formatAmount(amount: number | null, currency: string, isFullFunding: boolean): string | null {
+  if (isFullFunding) return "Entièrement financée";
+  if (!amount) return null;
+  return `${amount.toLocaleString()} ${currency}`;
+}
 
 export default async function BourseDetailPage({
   params,
@@ -20,10 +53,9 @@ export default async function BourseDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const scholarship = scholarships.find((s) => s.id === id);
 
-  if (!scholarship) notFound();
-  const s = scholarship;
+  const s = await prisma.scholarship.findUnique({ where: { id } });
+  if (!s) notFound();
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -34,6 +66,11 @@ export default async function BourseDetailPage({
     });
     isSaved = !!saved;
   }
+
+  const flag = getFlag(s.country);
+  const levels = s.academicLevels.map((l) => levelLabels[l] ?? l).join(", ");
+  const deadline = formatDeadline(s.deadline);
+  const amount = formatAmount(s.amount, s.currency, s.isFullFunding);
 
   return (
     <div className="flex flex-col">
@@ -48,12 +85,9 @@ export default async function BourseDetailPage({
             Toutes les bourses
           </Link>
           <div className="flex flex-wrap items-start gap-3 mb-3">
-            <Badge className="bg-white/20 text-white border-0">{typeLabel[s.type]}</Badge>
-            {s.urgent && (
-              <Badge className="bg-[var(--orange)] text-white border-0">
-                toi tu connais oub!
-              </Badge>
-            )}
+            <Badge className="bg-white/20 text-white border-0">
+              {s.isFullFunding ? "Entièrement financée" : "Bourse"}
+            </Badge>
           </div>
           <h1 className="text-3xl font-bold leading-snug max-w-3xl">{s.name}</h1>
           <p className="mt-2 text-white/70">{s.provider}</p>
@@ -71,29 +105,31 @@ export default async function BourseDetailPage({
                 <p className="text-xs text-slate-500 mb-1">Pays</p>
                 <p className="font-semibold text-slate-800 flex items-center gap-1">
                   <MapPin size={13} className="text-[var(--orange)]" />
-                  {s.flag} {s.country}
+                  {flag} {s.country}
                 </p>
               </div>
-              <div>
-                <p className="text-xs text-slate-500 mb-1">Niveau</p>
-                <p className="font-semibold text-slate-800 flex items-center gap-1">
-                  <GraduationCap size={13} className="text-[var(--orange)]" />
-                  {s.levels.join(", ")}
-                </p>
-              </div>
+              {levels && (
+                <div>
+                  <p className="text-xs text-slate-500 mb-1">Niveau</p>
+                  <p className="font-semibold text-slate-800 flex items-center gap-1">
+                    <GraduationCap size={13} className="text-[var(--orange)]" />
+                    {levels}
+                  </p>
+                </div>
+              )}
               <div>
                 <p className="text-xs text-slate-500 mb-1">Date limite</p>
                 <p className="font-semibold text-slate-800 flex items-center gap-1">
                   <CalendarDays size={13} className="text-[var(--orange)]" />
-                  {s.deadline}
+                  {deadline}
                 </p>
               </div>
-              {s.amount && (
+              {amount && (
                 <div>
                   <p className="text-xs text-slate-500 mb-1">Montant</p>
                   <p className="font-semibold text-slate-800 flex items-center gap-1">
                     <Banknote size={13} className="text-[var(--orange)]" />
-                    {s.amount}
+                    {amount}
                   </p>
                 </div>
               )}
@@ -108,40 +144,33 @@ export default async function BourseDetailPage({
             </div>
 
             {/* Fields */}
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-              <h2 className="text-lg font-bold text-[var(--primary)] mb-3 flex items-center gap-2">
-                <BookOpen size={18} className="text-[var(--orange)]" />
-                Filières concernées
-              </h2>
-              <div className="flex flex-wrap gap-2">
-                {s.fields.map((field) => (
-                  <Badge
-                    key={field}
-                    variant="secondary"
-                    className="text-xs"
-                  >
-                    {field}
-                  </Badge>
-                ))}
+            {s.fields.length > 0 && (
+              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                <h2 className="text-lg font-bold text-[var(--primary)] mb-3 flex items-center gap-2">
+                  <BookOpen size={18} className="text-[var(--orange)]" />
+                  Filières concernées
+                </h2>
+                <div className="flex flex-wrap gap-2">
+                  {s.fields.map((field) => (
+                    <Badge key={field} variant="secondary" className="text-xs">
+                      {field}
+                    </Badge>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Requirements */}
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-              <h2 className="text-lg font-bold text-[var(--primary)] mb-3">
-                Conditions d&apos;éligibilité
-              </h2>
-              <ul className="space-y-2">
-                {s.requirements.map((req, i) => (
-                  <li key={i} className="flex items-start gap-2 text-sm text-slate-600">
-                    <span className="mt-1 h-4 w-4 rounded-full bg-[var(--primary)]/10 text-[var(--primary)] text-[10px] font-bold flex items-center justify-center shrink-0">
-                      {i + 1}
-                    </span>
-                    {req}
-                  </li>
-                ))}
-              </ul>
-            </div>
+            {s.requirements && (
+              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                <h2 className="text-lg font-bold text-[var(--primary)] mb-3">
+                  Conditions d&apos;éligibilité
+                </h2>
+                <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line">
+                  {s.requirements}
+                </p>
+              </div>
+            )}
           </div>
 
           {/* ── Right: sidebar CTA ── */}
@@ -154,17 +183,19 @@ export default async function BourseDetailPage({
               <div className="space-y-3 mb-6 text-sm text-slate-600">
                 <div className="flex justify-between">
                   <span>Date limite</span>
-                  <span className="font-semibold text-slate-800">{s.deadline}</span>
+                  <span className="font-semibold text-slate-800">{deadline}</span>
                 </div>
-                {s.amount && (
+                {amount && (
                   <div className="flex justify-between">
                     <span>Montant</span>
-                    <span className="font-semibold text-slate-800">{s.amount}</span>
+                    <span className="font-semibold text-slate-800">{amount}</span>
                   </div>
                 )}
                 <div className="flex justify-between">
                   <span>Type</span>
-                  <span className="font-semibold text-slate-800">{typeLabel[s.type]}</span>
+                  <span className="font-semibold text-slate-800">
+                    {s.isFullFunding ? "Entièrement financée" : "Bourse"}
+                  </span>
                 </div>
               </div>
 
@@ -173,7 +204,7 @@ export default async function BourseDetailPage({
                 className="w-full bg-[var(--primary)] text-white hover:bg-[var(--primary)]/90"
               >
                 <a
-                  href={s.applicationUrl}
+                  href={s.link}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center justify-center gap-2"

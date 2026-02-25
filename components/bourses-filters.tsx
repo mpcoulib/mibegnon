@@ -5,16 +5,15 @@ import { Search } from "lucide-react";
 
 const types = [
   { value: "", label: "Toutes" },
-  { value: "complete", label: "Complètes" },
+  { value: "funded", label: "Entièrement financées" },
   { value: "partial", label: "Partielles" },
-  { value: "exchange", label: "Échanges" },
 ];
 
 const levels = [
   { value: "", label: "Tous niveaux" },
-  { value: "Licence", label: "Licence" },
-  { value: "Master", label: "Master" },
-  { value: "Doctorat", label: "Doctorat" },
+  { value: "BACHELOR", label: "Licence" },
+  { value: "MASTER", label: "Master" },
+  { value: "DOCTORAT", label: "Doctorat" },
 ];
 
 export function BoursesFilters() {

@@ -4,13 +4,49 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { SaveButton } from "@/components/save-button";
-import type { Scholarship } from "@/lib/mock-data";
+import type { Scholarship } from "@prisma/client";
 
-const typeLabel: Record<string, string> = {
-  complete: "Bourse complète",
-  partial: "Aide partielle",
-  exchange: "Programme d'échange",
+const levelLabels: Record<string, string> = {
+  BACHELOR: "Licence", MASTER: "Master", DOCTORAT: "Doctorat",
+  FELLOWSHIP: "Fellowship", SECONDARY: "Secondaire",
 };
+
+const countryFlags: Record<string, string> = {
+  "France": "🇫🇷", "Germany": "🇩🇪", "Allemagne": "🇩🇪",
+  "United Kingdom": "🇬🇧", "Royaume-Uni": "🇬🇧", "UK": "🇬🇧",
+  "USA": "🇺🇸", "United States": "🇺🇸", "États-Unis": "🇺🇸",
+  "Canada": "🇨🇦", "Australia": "🇦🇺", "Japan": "🇯🇵",
+  "China": "🇨🇳", "South Korea": "🇰🇷", "Korea": "🇰🇷",
+  "Turkey": "🇹🇷", "Türkiye": "🇹🇷", "Switzerland": "🇨🇭", "Suisse": "🇨🇭",
+  "Netherlands": "🇳🇱", "Sweden": "🇸🇪", "Norway": "🇳🇴", "Denmark": "🇩🇰",
+  "Belgium": "🇧🇪", "Italy": "🇮🇹", "Spain": "🇪🇸", "Portugal": "🇵🇹",
+  "India": "🇮🇳", "Brazil": "🇧🇷", "South Africa": "🇿🇦",
+  "Nigeria": "🇳🇬", "Ghana": "🇬🇭", "Kenya": "🇰🇪", "Rwanda": "🇷🇼",
+  "Senegal": "🇸🇳", "Côte d'Ivoire": "🇨🇮", "Ivory Coast": "🇨🇮",
+  "Morocco": "🇲🇦", "Egypt": "🇪🇬", "Ethiopia": "🇪🇹", "Cameroon": "🇨🇲",
+  "Saudi Arabia": "🇸🇦", "UAE": "🇦🇪", "Lebanon": "🇱🇧",
+  "Thailand": "🇹🇭", "Malaysia": "🇲🇾", "Singapore": "🇸🇬",
+  "Indonesia": "🇮🇩", "New Zealand": "🇳🇿", "Greece": "🇬🇷",
+  "Azerbaijan": "🇦🇿", "Latvia": "🇱🇻", "Romania": "🇷🇴",
+  "International": "🌍",
+};
+
+function getFlag(country: string): string {
+  return countryFlags[country] ?? "🌍";
+}
+
+function formatDeadline(date: Date | null): string {
+  if (!date) return "Non précisée";
+  return new Date(date).toLocaleDateString("fr-FR", {
+    day: "numeric", month: "long", year: "numeric",
+  });
+}
+
+function isUrgent(date: Date | null): boolean {
+  if (!date) return false;
+  const diff = new Date(date).getTime() - Date.now();
+  return diff > 0 && diff < 30 * 24 * 60 * 60 * 1000;
+}
 
 export function ScholarshipCard({
   scholarship: s,
@@ -21,6 +57,10 @@ export function ScholarshipCard({
   featured?: boolean;
   isSaved?: boolean;
 }) {
+  const flag = getFlag(s.country);
+  const urgent = isUrgent(s.deadline);
+  const levels = s.academicLevels.map((l) => levelLabels[l] ?? l).join(", ");
+
   return (
     <Card
       className={`relative overflow-hidden transition-shadow hover:shadow-md ${
@@ -29,7 +69,7 @@ export function ScholarshipCard({
           : "border-slate-200 shadow-sm"
       }`}
     >
-      <span className="absolute top-3 right-3 text-2xl">{s.flag}</span>
+      <span className="absolute top-3 right-3 text-2xl">{flag}</span>
 
       <CardContent className="pt-5 pb-6 pr-12">
         <div className="flex flex-wrap gap-2 mb-3">
@@ -37,9 +77,9 @@ export function ScholarshipCard({
             variant="outline"
             className="text-[var(--primary)] border-[var(--primary)] text-xs"
           >
-            {typeLabel[s.type]}
+            {s.isFullFunding ? "Entièrement financée" : "Bourse"}
           </Badge>
-          {s.urgent && (
+          {urgent && (
             <Badge className="bg-[var(--orange)] text-white border-0 text-xs">
               toi tu connais oub!
             </Badge>
@@ -54,13 +94,15 @@ export function ScholarshipCard({
             <MapPin size={14} className="text-[var(--orange)] shrink-0" />
             {s.country}
           </li>
-          <li className="flex items-center gap-2">
-            <GraduationCap size={14} className="text-[var(--orange)] shrink-0" />
-            {s.levels.join(", ")}
-          </li>
+          {levels && (
+            <li className="flex items-center gap-2">
+              <GraduationCap size={14} className="text-[var(--orange)] shrink-0" />
+              {levels}
+            </li>
+          )}
           <li className="flex items-center gap-2">
             <CalendarDays size={14} className="text-[var(--orange)] shrink-0" />
-            Date limite : {s.deadline}
+            Date limite : {formatDeadline(s.deadline)}
           </li>
         </ul>
 

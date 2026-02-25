@@ -1,7 +1,6 @@
 import { Suspense } from "react";
 import { ScholarshipCard } from "@/components/scholarship-card";
 import { BoursesFilters } from "@/components/bourses-filters";
-import { scholarships, filterScholarships } from "@/lib/mock-data";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 
@@ -11,7 +10,31 @@ export default async function BoursesPage({
   searchParams: Promise<{ type?: string; niveau?: string; q?: string }>;
 }) {
   const params = await searchParams;
-  const results = filterScholarships(scholarships, params);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const where: any = {
+    isActive: true,
+    ...(params.type === "funded" ? { isFullFunding: true } : {}),
+    ...(params.type === "partial" ? { isFullFunding: false } : {}),
+    ...(params.niveau
+      ? { academicLevels: { has: params.niveau } }
+      : {}),
+    ...(params.q
+      ? {
+          OR: [
+            { name: { contains: params.q, mode: "insensitive" } },
+            { provider: { contains: params.q, mode: "insensitive" } },
+            { country: { contains: params.q, mode: "insensitive" } },
+          ],
+        }
+      : {}),
+  };
+
+  const scholarships = await prisma.scholarship.findMany({
+    where,
+    orderBy: { deadline: "asc" },
+    take: 100,
+  });
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -34,28 +57,25 @@ export default async function BoursesPage({
           </p>
           <h1 className="text-4xl font-bold">Toutes les bourses</h1>
           <p className="mt-2 text-white/70">
-            {scholarships.length} bourses disponibles, filtrées pour les élèves ivoiriens
+            {scholarships.length} bourse{scholarships.length > 1 ? "s" : ""} disponible{scholarships.length > 1 ? "s" : ""}
           </p>
         </div>
       </section>
 
       {/* Content */}
       <div className="mx-auto w-full max-w-6xl px-6 py-10">
-        {/* Filters */}
         <Suspense fallback={<div className="h-24 rounded-xl bg-slate-100 animate-pulse" />}>
           <BoursesFilters />
         </Suspense>
 
-        {/* Results count */}
         <p className="mt-6 mb-4 text-sm text-slate-500">
-          {results.length} bourse{results.length > 1 ? "s" : ""} trouvée
-          {results.length > 1 ? "s" : ""}
+          {scholarships.length} bourse{scholarships.length > 1 ? "s" : ""} trouvée
+          {scholarships.length > 1 ? "s" : ""}
         </p>
 
-        {/* Grid */}
-        {results.length > 0 ? (
+        {scholarships.length > 0 ? (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {results.map((s) => (
+            {scholarships.map((s) => (
               <ScholarshipCard key={s.id} scholarship={s} isSaved={savedIds.includes(s.id)} />
             ))}
           </div>
