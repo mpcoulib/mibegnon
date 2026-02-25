@@ -21,7 +21,7 @@ export default async function BoursesPage({
       where: { userId: user.id },
       select: { scholarshipId: true },
     });
-    savedIds = saved.map((s) => s.scholarshipId);
+    savedIds = saved.map((s: { scholarshipId: string }) => s.scholarshipId);
   }
 
   return (
