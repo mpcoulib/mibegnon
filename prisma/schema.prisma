@@ -65,6 +65,7 @@ model Scholarship {
   link             String
   isActive         Boolean   @default(true)
   ivoirianEligible Boolean   @default(true)
+  isTranslated     Boolean   @default(false)
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 

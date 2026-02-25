@@ -15,6 +15,7 @@ export default async function BoursesPage({
   const where: any = {
     isActive: true,
     ivoirianEligible: true,
+    isTranslated: true,
     ...(params.type === "funded" ? { isFullFunding: true } : {}),
     ...(params.type === "partial" ? { isFullFunding: false } : {}),
     ...(params.niveau

@@ -3,10 +3,11 @@
  *
  * Translates all scholarships in the DB to French and determines Ivorian eligibility.
  *
- * Usage:
+ * commands importants to remember:
  *   npx tsx scripts/translate-scholarships.ts
  *   npx tsx scripts/translate-scholarships.ts --limit 10
  *   npx tsx scripts/translate-scholarships.ts --dry-run
+ *   npx tsx scripts/translate-scholarships.ts --force   ← re-translate already translated ones
  */
 
 import Anthropic from "@anthropic-ai/sdk";
@@ -14,6 +15,7 @@ import { PrismaClient } from "@prisma/client";
 
 const args = process.argv.slice(2);
 const DRY_RUN = args.includes("--dry-run");
+const FORCE = args.includes("--force");
 const limitArg = args.indexOf("--limit");
 const LIMIT = limitArg !== -1 ? Number(args[limitArg + 1]) : null;
 const DELAY_MS = 1200;
@@ -40,7 +42,7 @@ const TRANSLATE_TOOL: Anthropic.Tool = {
     "Translate a scholarship's details to French and determine if students from Côte d'Ivoire (Ivory Coast) are eligible.",
   input_schema: {
     type: "object" as const,
-    required: ["name", "description", "ivoirianEligible"],
+    required: ["name", "description", "fields", "ivoirianEligible"],
     properties: {
       name: {
         type: "string",
@@ -57,10 +59,16 @@ const TRANSLATE_TOOL: Anthropic.Tool = {
         description:
           "Requirements translated to natural French. If null or empty, return null.",
       },
+      fields: {
+        type: "array",
+        items: { type: "string" },
+        description:
+          "Study fields/domains translated to French. Examples: 'Engineering' → 'Ingénierie', 'Computer Science' → 'Informatique', 'Medicine' → 'Médecine', 'Business' → 'Commerce', 'Law' → 'Droit', 'Economics' → 'Économie', 'Education' → 'Éducation', 'Public Health' → 'Santé publique', 'Social Sciences' → 'Sciences sociales', 'Mathematics' → 'Mathématiques', 'Physics' → 'Physique', 'Chemistry' → 'Chimie', 'Biology' → 'Biologie', 'Finance' → 'Finance', 'Journalism' → 'Journalisme', 'Environmental Science' → 'Sciences de l\\'environnement', 'Agriculture' → 'Agriculture', 'Arts' → 'Arts'. If the array is empty, return [].",
+      },
       ivoirianEligible: {
         type: "boolean",
         description:
-          "True if students from Côte d'Ivoire (Ivory Coast) are likely eligible. False ONLY if the scholarship explicitly restricts to specific countries that exclude Côte d'Ivoire (e.g., Nigeria-only programs mentioning NYSC, JAMB, NIN; scholarships requiring specific citizenship like 'must be a Nigerian citizen'). If open to 'African students', 'Sub-Saharan Africa', 'developing countries', or 'international students' → true.",
+          "Carefully read the name, description, and requirements to determine if students from Côte d'Ivoire (Ivory Coast) are likely eligible. Return false if ANY of these apply: the scholarship mentions country-specific programs or IDs (e.g., NYSC, JAMB, NIN, BVN — Nigerian; NHIF — Kenyan; etc.), it explicitly requires citizenship of a specific country that is not Côte d'Ivoire, or it targets residents of a single country that excludes Côte d'Ivoire. Return true if the scholarship is open to 'African students', 'Sub-Saharan Africa', 'developing countries', 'international students', or if no geographic restriction is mentioned.",
       },
     },
   },
@@ -72,7 +80,7 @@ function sleep(ms: number) {
 
 async function translateScholarship(
   client: Anthropic,
-  scholarship: { name: string; description: string; requirements: string | null }
+  scholarship: { name: string; description: string; requirements: string | null; fields: string[] }
 ) {
   const response = await client.messages.create({
     model: "claude-haiku-4-5-20251001",
@@ -82,7 +90,7 @@ async function translateScholarship(
     messages: [
       {
         role: "user",
-        content: `Translate this scholarship to French and check Ivorian eligibility.\n\nNAME: ${scholarship.name}\n\nDESCRIPTION: ${scholarship.description}\n\nREQUIREMENTS: ${scholarship.requirements ?? "N/A"}`,
+        content: `Translate this scholarship to French and check Ivorian eligibility.\n\nNAME: ${scholarship.name}\n\nDESCRIPTION: ${scholarship.description}\n\nREQUIREMENTS: ${scholarship.requirements ?? "N/A"}\n\nFIELDS: ${scholarship.fields.length > 0 ? scholarship.fields.join(", ") : "N/A"}`,
       },
     ],
   });
@@ -94,6 +102,7 @@ async function translateScholarship(
     name: string;
     description: string;
     requirements: string | null;
+    fields: string[];
     ivoirianEligible: boolean;
   };
 }
@@ -101,18 +110,20 @@ async function translateScholarship(
 async function main() {
   console.log("=== Mibegnon Scholarship Translator ===");
   if (DRY_RUN) console.log("DRY RUN — nothing will be written to the DB.\n");
+  if (FORCE) console.log("FORCE — re-translating already translated scholarships.\n");
 
   const client = new Anthropic();
   const prisma = new PrismaClient();
 
   try {
     const scholarships = await prisma.scholarship.findMany({
-      select: { id: true, name: true, description: true, requirements: true, country: true },
+      where: FORCE ? undefined : { isTranslated: false },
+      select: { id: true, name: true, description: true, requirements: true, country: true, fields: true },
       take: LIMIT ?? undefined,
       orderBy: { createdAt: "asc" },
     });
 
-    console.log(`\nTranslating ${scholarships.length} scholarships...\n`);
+    console.log(`\n${scholarships.length} scholarship(s) to translate...\n`);
 
     let translated = 0;
     let failed = 0;
@@ -135,6 +146,7 @@ async function main() {
           console.log(`\n[DRY] ${s.name}`);
           console.log(`  → ${result.name}`);
           console.log(`  Pays: ${frenchCountry}`);
+          console.log(`  Filières: ${result.fields.join(", ") || "—"}`);
           console.log(`  Ivoiriens: ${result.ivoirianEligible ? "✓ éligibles" : "✗ non éligibles"}`);
           console.log(`  Desc: ${result.description.slice(0, 100)}…`);
         } else {
@@ -144,8 +156,10 @@ async function main() {
               name: result.name,
               description: result.description,
               requirements: result.requirements ?? null,
+              fields: result.fields,
               country: frenchCountry,
               ivoirianEligible: result.ivoirianEligible,
+              isTranslated: true,
             },
           });
           translated++;
