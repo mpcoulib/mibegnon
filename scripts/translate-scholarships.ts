@@ -16,7 +16,7 @@ const args = process.argv.slice(2);
 const DRY_RUN = args.includes("--dry-run");
 const limitArg = args.indexOf("--limit");
 const LIMIT = limitArg !== -1 ? Number(args[limitArg + 1]) : null;
-const DELAY_MS = 300;
+const DELAY_MS = 1200;
 
 const FRENCH_COUNTRIES: Record<string, string> = {
   "Germany": "Allemagne", "United Kingdom": "Royaume-Uni", "UK": "Royaume-Uni",

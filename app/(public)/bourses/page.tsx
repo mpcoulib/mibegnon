@@ -7,15 +7,14 @@ import { prisma } from "@/lib/prisma";
 export default async function BoursesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ type?: string; niveau?: string; q?: string; ci?: string }>;
+  searchParams: Promise<{ type?: string; niveau?: string; q?: string }>;
 }) {
   const params = await searchParams;
-  const filterCi = params.ci !== "all";
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const where: any = {
     isActive: true,
-    ...(filterCi ? { ivoirianEligible: true } : {}),
+    ivoirianEligible: true,
     ...(params.type === "funded" ? { isFullFunding: true } : {}),
     ...(params.type === "partial" ? { isFullFunding: false } : {}),
     ...(params.niveau
@@ -34,7 +33,11 @@ export default async function BoursesPage({
 
   const scholarships = await prisma.scholarship.findMany({
     where,
-    orderBy: { deadline: "asc" },
+    orderBy: [
+      { isFullFunding: "desc" },
+      { amount: "desc" },
+      { deadline: "asc" },
+    ],
     take: 100,
   });
 

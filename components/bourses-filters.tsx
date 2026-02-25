@@ -24,7 +24,6 @@ export function BoursesFilters() {
   const currentType = searchParams.get("type") || "";
   const currentNiveau = searchParams.get("niveau") || "";
   const currentQ = searchParams.get("q") || "";
-  const currentCi = searchParams.get("ci") !== "all";
 
   function update(key: string, value: string) {
     const params = new URLSearchParams(searchParams.toString());
@@ -94,25 +93,6 @@ export function BoursesFilters() {
         </div>
       </div>
 
-      {/* Ivorian eligibility toggle */}
-      <div className="flex items-center justify-between rounded-lg border border-slate-200 bg-white px-4 py-2.5">
-        <div>
-          <p className="text-sm font-medium text-slate-700">🇨🇮 Ouvert aux Ivoiriens</p>
-          <p className="text-xs text-slate-400">Masquer les bourses non accessibles</p>
-        </div>
-        <button
-          onClick={() => update("ci", currentCi ? "all" : "")}
-          className={`relative h-6 w-11 rounded-full transition-colors ${
-            currentCi ? "bg-[var(--primary)]" : "bg-slate-200"
-          }`}
-        >
-          <span
-            className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${
-              currentCi ? "translate-x-5" : "translate-x-0"
-            }`}
-          />
-        </button>
-      </div>
     </div>
   );
 }
