@@ -34,15 +34,20 @@ export default async function BoursesPage({
       : {}),
   };
 
-  const scholarships = await prisma.scholarship.findMany({
-    where,
-    orderBy: [
-      { category: { sort: "asc", nulls: "last" } },
-      { isFullFunding: "desc" },
-      { amount: "desc" },
-      { deadline: "asc" },
-    ]
-  });
+  const raw = await prisma.scholarship.findMany({ where });
+
+  function shuffle<T>(arr: T[]): T[] {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  const tagged = shuffle(raw.filter((s) => s.category !== null));
+  const untagged = shuffle(raw.filter((s) => s.category === null));
+  const scholarships = [...tagged, ...untagged];
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
