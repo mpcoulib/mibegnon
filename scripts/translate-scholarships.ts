@@ -1,18 +1,3 @@
-/**
- * scripts/translate-scholarships.ts
- *
- * Translates all scholarships in the DB to French and determines Ivorian eligibility.
- * Saves API calls by:
- *   1. Pre-filtering obviously ineligible scholarships with regex (no API call)
- *   2. Translating common study fields with a static map (no API call)
- *
- * commands importants to remember:
- *   npx tsx scripts/translate-scholarships.ts
- *   npx tsx scripts/translate-scholarships.ts --limit 10
- *   npx tsx scripts/translate-scholarships.ts --dry-run
- *   npx tsx scripts/translate-scholarships.ts --force   ← re-translate already translated ones
- */
-
 import Anthropic from "@anthropic-ai/sdk";
 import { PrismaClient } from "@prisma/client";
 
@@ -22,8 +7,6 @@ const FORCE = args.includes("--force");
 const limitArg = args.indexOf("--limit");
 const LIMIT = limitArg !== -1 ? Number(args[limitArg + 1]) : null;
 const DELAY_MS = 1200;
-
-// ─── Static lookups (no API cost) ────────────────────────────────────────────
 
 const FRENCH_COUNTRIES: Record<string, string> = {
   "Germany": "Allemagne", "United Kingdom": "Royaume-Uni", "UK": "Royaume-Uni",
@@ -79,20 +62,14 @@ const FIELD_TRANSLATIONS: Record<string, string> = {
   "Supply Chain": "Chaîne d'approvisionnement", "Logistics": "Logistique",
 };
 
-// Patterns that confirm a scholarship is restricted to a specific country
-// that is NOT Côte d'Ivoire — no need to call the API for these.
 const INELIGIBLE_PATTERNS = [
-  // Nigeria-specific IDs and programs
   /\b(NYSC|JAMB|NIN|BVN|WAEC|NECO|NPC)\b/,
-  // Explicit citizenship restrictions for other countries
   /\b(nigerian|kenyan|ghanaian|south african|egyptian|ethiopian|ugandan|tanzanian|rwandan|zambian|zimbabwean)\s+(nationals?|citizens?|passport holders?)\b/i,
   /must\s+be\s+a?\s+(nigerian|kenyan|ghanaian|south african|ugandan|tanzanian|rwandan)\b/i,
   /only\s+(open\s+)?for\s+(nigerian|kenyan|ghanaian|south african)\b/i,
   /exclusively\s+(for|available\s+to)\s+(nigerian|kenyan|ghanaian)\b/i,
   /restricted\s+to\s+(nigerian|kenyan|ghanaian)\b/i,
-  // Kenya-specific programs
   /\bNHIF\b/,
-  // India-specific
   /\b(AICTE|UGC|GATE exam)\b/,
 ];
 
@@ -105,8 +82,6 @@ function translateFieldsStatically(fields: string[]): { result: string[]; hasUnk
   const hasUnknown = fields.some((f) => !FIELD_TRANSLATIONS[f]);
   return { result, hasUnknown };
 }
-
-// ─── Anthropic tool (only called when needed) ─────────────────────────────────
 
 const TRANSLATE_TOOL: Anthropic.Tool = {
   name: "translate_scholarship",
@@ -184,8 +159,6 @@ async function translateScholarship(
   };
 }
 
-// ─── Main ─────────────────────────────────────────────────────────────────────
-
 async function main() {
   console.log("=== Mibegnon Scholarship Translator ===");
   if (DRY_RUN) console.log("DRY RUN — nothing will be written to the DB.\n");
@@ -216,7 +189,6 @@ async function main() {
         const frenchCountry = FRENCH_COUNTRIES[s.country] ?? s.country;
         const { result: translatedFields, hasUnknown } = translateFieldsStatically(s.fields);
 
-        // ── Pre-filter: no API call needed ──
         if (isObviouslyIneligible(fullText)) {
           skippedIneligible++;
           if (DRY_RUN) {
@@ -236,7 +208,6 @@ async function main() {
           continue;
         }
 
-        // ── API call for translation + eligibility ──
         const unknownFields = hasUnknown
           ? s.fields.filter((f) => !FIELD_TRANSLATIONS[f])
           : [];
@@ -249,7 +220,6 @@ async function main() {
           continue;
         }
 
-        // Merge: static translations + any unknown ones Claude translated
         const finalFields = s.fields.map((f) => {
           if (FIELD_TRANSLATIONS[f]) return FIELD_TRANSLATIONS[f];
           const idx = unknownFields.indexOf(f);

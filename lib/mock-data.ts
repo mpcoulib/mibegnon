@@ -1,4 +1,3 @@
-// ── Types ────────────────────────────────────────────────────────────────────
 
 export type ScholarshipType = "complete" | "partial" | "exchange";
 export type Level = "Licence" | "Master" | "Doctorat";
@@ -12,7 +11,7 @@ export interface Scholarship {
   type: ScholarshipType;
   levels: Level[];
   fields: string[];
-  deadline: string;       // readable French date
+  deadline: string;
   amount?: string;
   description: string;
   requirements: string[];
@@ -33,7 +32,6 @@ export interface University {
   websiteUrl: string;
 }
 
-// ── Scholarships ─────────────────────────────────────────────────────────────
 
 export const scholarships: Scholarship[] = [
   {
@@ -214,7 +212,6 @@ export const scholarships: Scholarship[] = [
   },
 ];
 
-// ── Universities ─────────────────────────────────────────────────────────────
 
 export const universities: University[] = [
   {
@@ -333,7 +330,6 @@ export const universities: University[] = [
   },
 ];
 
-// ── Filter helpers ────────────────────────────────────────────────────────────
 
 export function filterScholarships(
   items: Scholarship[],

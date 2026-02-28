@@ -1,18 +1,6 @@
-/**
- * scripts/scrape-ai.ts
- *
- * Usage:
- *   npx tsx scripts/scrape-ai.ts
- *   npx tsx scripts/scrape-ai.ts --limit 10 --dry-run
- *   npx tsx scripts/scrape-ai.ts --category 42
- *   npx tsx scripts/scrape-ai.ts --list-categories
- */
-
 import Anthropic from "@anthropic-ai/sdk";
 import { PrismaClient } from "@prisma/client";
 import * as cheerio from "cheerio";
-
-// ─── Config ───────────────────────────────────────────────────────────────────
 
 const BASE_URL  = "https://www.scholarshipregion.com";
 const API_BASE  = `${BASE_URL}/wp-json/wp/v2`;
@@ -24,16 +12,12 @@ const HEADERS: Record<string, string> = {
   Accept: "application/json",
 };
 
-// ─── CLI args ─────────────────────────────────────────────────────────────────
-
 const args         = process.argv.slice(2);
 const DRY_RUN      = args.includes("--dry-run");
 const categoryArg  = args.indexOf("--category");
 const CATEGORY_ID  = categoryArg !== -1 ? Number(args[categoryArg + 1]) : null;
 const limitArg     = args.indexOf("--limit");
 const LIMIT        = limitArg !== -1 ? Number(args[limitArg + 1]) : null;
-
-// ─── Types ────────────────────────────────────────────────────────────────────
 
 interface WpPost {
   id: number;
@@ -59,8 +43,6 @@ interface ScholarshipExtraction {
   requirements: string | null;
   applyLink: string | null;
 }
-
-// ─── Tool schema ──────────────────────────────────────────────────────────────
 
 const EXTRACT_TOOL: Anthropic.Tool = {
   name: "extract_scholarship",
@@ -130,8 +112,6 @@ const EXTRACT_TOOL: Anthropic.Tool = {
   },
 };
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
 function sleep(ms: number) {
   return new Promise((r) => setTimeout(r, ms));
 }
@@ -144,8 +124,6 @@ function stripHtml(html: string): string {
 function truncate(text: string, maxChars = 6000): string {
   return text.length > maxChars ? text.slice(0, maxChars) + "…" : text;
 }
-
-// ─── WP API ───────────────────────────────────────────────────────────────────
 
 async function fetchCategories(search = "") {
   const url = new URL(`${API_BASE}/categories`);
@@ -189,8 +167,6 @@ async function fetchAllPosts(categoryId?: number, limit?: number): Promise<WpPos
   return posts;
 }
 
-// ─── AI extraction ────────────────────────────────────────────────────────────
-
 async function extractWithClaude(
   client: Anthropic,
   post: WpPost
@@ -222,8 +198,6 @@ async function extractWithClaude(
     fields:         raw.fields ?? [],
   };
 }
-
-// ─── DB upsert ────────────────────────────────────────────────────────────────
 
 async function upsertScholarship(
   prisma: PrismaClient,
@@ -262,8 +236,6 @@ async function upsertScholarship(
   await prisma.scholarship.create({ data: payload });
   return "created";
 }
-
-// ─── Main ─────────────────────────────────────────────────────────────────────
 
 async function main() {
   console.log("=== Mibegnon AI Scholarship Scraper ===");

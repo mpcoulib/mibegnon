@@ -13,7 +13,6 @@ import {
   Sparkles,
 } from "lucide-react";
 
-// ── Static preview data (will be replaced by DB data later) ──────────────────
 const featuredScholarships = [
   {
     id: "1",
@@ -89,29 +88,11 @@ export default function HomePage() {
                 asChild
                 size="lg"
                 variant="outline"
-                className="rounded-full border-white text-white hover:bg-white/10 font-semibold px-8"
+                className="rounded-full bg-white/20 border border-white text-white hover:bg-white/30 font-semibold px-8"
               >
                 <Link href="/universites">Voir les universités</Link>
               </Button>
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Stats bar ── */}
-      <section className="bg-[var(--primary)] text-white">
-        <div className="mx-auto grid max-w-4xl grid-cols-3 divide-x divide-white/20 py-6 text-center">
-          <div className="px-4">
-            <p className="text-3xl font-bold">500+</p>
-            <p className="mt-1 text-sm text-white/70">Bourses disponibles</p>
-          </div>
-          <div className="px-4">
-            <p className="text-3xl font-bold">200+</p>
-            <p className="mt-1 text-sm text-white/70">Universités référencées</p>
-          </div>
-          <div className="px-4">
-            <p className="text-3xl font-bold">50+</p>
-            <p className="mt-1 text-sm text-white/70">Pays dans le monde</p>
           </div>
         </div>
       </section>

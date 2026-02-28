@@ -1,30 +1,14 @@
-/**
- * scripts/scrape.ts
- *
- * Scrapes scholarships from ScholarshipRegion.com via the WordPress REST API,
- * parses the article HTML with cheerio, and upserts records into the DB via Prisma.
- *
- * Usage:
- *   npx tsx scripts/scrape.ts
- *   npx tsx scripts/scrape.ts --category 42   # filter by WP category ID
- *   npx tsx scripts/scrape.ts --dry-run        # parse without writing to DB
- */
-
 import { PrismaClient } from "@prisma/client";
 import * as cheerio from "cheerio";
 
-// ─── Config ──────────────────────────────────────────────────────────────────
-
 const BASE_URL = "https://www.scholarshipregion.com";
 const API_BASE = `${BASE_URL}/wp-json/wp/v2`;
-const DELAY_MS = 500; // polite delay between requests
+const DELAY_MS = 500;
 
 const HEADERS: Record<string, string> = {
   "User-Agent": "Mozilla/5.0 (compatible; MibegnonBot/1.0)",
   Accept: "application/json",
 };
-
-// ─── CLI args ─────────────────────────────────────────────────────────────────
 
 const args = process.argv.slice(2);
 const DRY_RUN = args.includes("--dry-run");
@@ -34,8 +18,6 @@ const CATEGORY_ID: number | null =
 const limitArg = args.indexOf("--limit");
 const LIMIT: number | null =
   limitArg !== -1 ? Number(args[limitArg + 1]) : null;
-
-// ─── Types ────────────────────────────────────────────────────────────────────
 
 interface WpPost {
   id: number;
@@ -62,8 +44,6 @@ interface ParsedScholarship {
   isActive: boolean;
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
 function sleep(ms: number) {
   return new Promise((r) => setTimeout(r, ms));
 }
@@ -72,8 +52,6 @@ function stripHtml(html: string): string {
   const $ = cheerio.load(html);
   return $("body").text().replace(/\s+/g, " ").trim();
 }
-
-// ─── WP API ───────────────────────────────────────────────────────────────────
 
 async function fetchCategories(search = "") {
   const url = new URL(`${API_BASE}/categories`);
@@ -93,7 +71,7 @@ async function fetchPosts(page: number, categoryId?: number, perPage = 100): Pro
   if (categoryId) url.searchParams.set("categories", String(categoryId));
 
   const res = await fetch(url.toString(), { headers: HEADERS });
-  if (res.status === 400) return []; // WP returns 400 past the last page
+  if (res.status === 400) return [];
   if (!res.ok) throw new Error(`Posts fetch failed: ${res.status}`);
   return res.json() as Promise<WpPost[]>;
 }
@@ -119,8 +97,6 @@ async function fetchAllPosts(categoryId?: number, limit?: number): Promise<WpPos
   return posts;
 }
 
-// ─── Extraction ───────────────────────────────────────────────────────────────
-
 const LEVEL_MAP: Record<string, string[]> = {
   BACHELOR:  ["bachelor", "undergraduate", "licence", "bsc", "b.sc", "b.a."],
   MASTER:    ["master", "msc", "m.sc", "mba", "postgraduate", "graduate"],
@@ -140,7 +116,6 @@ const FIELD_MAP: Record<string, string[]> = {
   "Environnement":     ["environment", "climate", "sustainability", "agriculture"],
 };
 
-// Common scholarship-hosting countries to match against
 const KNOWN_COUNTRIES = [
   "USA", "United States", "UK", "United Kingdom", "Canada", "Australia",
   "Germany", "France", "Netherlands", "Sweden", "Norway", "Denmark",
@@ -154,13 +129,11 @@ function extractName(rawTitle: string): string {
 }
 
 function extractProvider(text: string, title: string): string {
-  // Try "Offered by X", "Funded by X", "Provided by X"
   const byMatch = text.match(
     /(?:offered|funded|provided|sponsored|supported)\s+by[:\s]+([A-Z][^\n.]{3,60})/i
   );
   if (byMatch) return byMatch[1].trim();
 
-  // Try "X Scholarship" pattern in the title — take everything before "Scholarship"
   const titleMatch = title.match(/^(.+?)\s+Scholarship/i);
   if (titleMatch) return titleMatch[1].trim();
 
@@ -175,7 +148,6 @@ function extractCountry(text: string): string {
     );
     if (pattern.test(text)) return country;
   }
-  // Fallback: look for "Study in X"
   const m = text.match(/[Ss]tudy in ([A-Z][a-zA-Z\s]{2,30})(?:[,.]|\s(?:for|and|with))/);
   if (m) return m[1].trim();
   return "International";
@@ -196,7 +168,6 @@ function extractAmount(text: string): { amount: number | null; currency: string;
     };
   }
 
-  // "USD 50,000" or "50,000 USD"
   const wordMatch = text.match(/(\d[\d,]+)\s*(USD|EUR|GBP)/i);
   if (wordMatch) {
     return {
@@ -244,7 +215,6 @@ function extractFields(text: string): string[] {
 
 function extractRequirements(html: string): string | null {
   const $ = cheerio.load(html);
-  // Look for a heading like "Eligibility", "Requirements", "Who can apply"
   const headings = $("h2, h3, h4, strong");
   let requirements: string | null = null;
 
@@ -254,15 +224,13 @@ function extractRequirements(html: string): string | null {
       const nextContent = $(el).nextUntil("h2, h3, h4").text().replace(/\s+/g, " ").trim();
       if (nextContent.length > 20) {
         requirements = nextContent;
-        return false; // break cheerio loop
+        return false;
       }
     }
   });
 
   return requirements;
 }
-
-// ─── Parser ───────────────────────────────────────────────────────────────────
 
 function parsePost(post: WpPost): ParsedScholarship {
   const titleRaw = post.title.rendered;
@@ -293,8 +261,6 @@ function parsePost(post: WpPost): ParsedScholarship {
   };
 }
 
-// ─── DB Upsert ────────────────────────────────────────────────────────────────
-
 async function upsertScholarship(
   prisma: PrismaClient,
   data: ParsedScholarship
@@ -313,13 +279,10 @@ async function upsertScholarship(
   return "created";
 }
 
-// ─── Main ─────────────────────────────────────────────────────────────────────
-
 async function main() {
   console.log("=== Mibegnon Scholarship Scraper ===");
   if (DRY_RUN) console.log("DRY RUN — nothing will be written to the DB.\n");
 
-  // Optionally list categories first
   if (args.includes("--list-categories")) {
     const cats = await fetchCategories("scholarships");
     console.log("\nAvailable categories:");
