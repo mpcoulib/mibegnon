@@ -97,6 +97,7 @@ export const scholarships: Scholarship[] = [
       "Besoins financiers démontrés",
       "Engagement fort envers le service à la communauté",
     ],
+
     applicationUrl: "https://mastercardfdn.org/programs/scholars",
     urgent: true,
   },

@@ -12,44 +12,29 @@ import {
   Send,
   Sparkles,
 } from "lucide-react";
+import { prisma } from "@/lib/prisma";
 
-const featuredScholarships = [
-  {
-    id: "1",
-    name: "Bourse d'Excellence académique — Sciences et Technologies",
-    provider: "Université Paris-Saclay",
-    country: "France",
-    flag: "🇫🇷",
-    level: "Master, Doctorat",
-    deadline: "30 Avril 2026",
-    type: "Bourse complète",
-    urgent: false,
-  },
-  {
-    id: "2",
-    name: "Programme MasterCard Foundation Scholars",
-    provider: "Ashesi University",
-    country: "Ghana",
-    flag: "🇬🇭",
-    level: "Licence",
-    deadline: "15 Mars 2026",
-    type: "Bourse complète",
-    urgent: true,
-  },
-  {
-    id: "3",
-    name: "Chevening Scholarships",
-    provider: "UK Universities",
-    country: "Royaume-Uni",
-    flag: "🇬🇧",
-    level: "Master",
-    deadline: "2 Mai 2026",
-    type: "Bourse complète",
-    urgent: false,
-  },
-];
+const countryFlags: Record<string, string> = {
+  "France": "🇫🇷", "Germany": "🇩🇪", "United Kingdom": "🇬🇧", "UK": "🇬🇧",
+  "USA": "🇺🇸", "United States": "🇺🇸", "Canada": "🇨🇦", "Australia": "🇦🇺",
+  "Japan": "🇯🇵", "China": "🇨🇳", "South Korea": "🇰🇷",
+  "Turkey": "🇹🇷", "Switzerland": "🇨🇭", "Netherlands": "🇳🇱",
+  "Sweden": "🇸🇪", "Norway": "🇳🇴", "Denmark": "🇩🇰",
+  "Belgium": "🇧🇪", "Italy": "🇮🇹", "Spain": "🇪🇸", "Portugal": "🇵🇹",
+  "India": "🇮🇳", "Brazil": "🇧🇷", "South Africa": "🇿🇦",
+  "Nigeria": "🇳🇬", "Ghana": "🇬🇭", "Kenya": "🇰🇪", "Rwanda": "🇷🇼",
+  "Senegal": "🇸🇳", "Côte d'Ivoire": "🇨🇮", "Morocco": "🇲🇦",
+  "Egypt": "🇪🇬", "Ethiopia": "🇪🇹", "Cameroon": "🇨🇲",
+  "International": "🌍",
+};
 
-export default function HomePage() {
+export default async function HomePage() {
+  const featuredScholarships = await prisma.scholarship.findMany({
+    where: { isActive: true, isTranslated: true },
+    orderBy: { createdAt: "desc" },
+    take: 3,
+  });
+
   return (
     <div className="flex flex-col">
       {/* ── Hero ── */}
@@ -110,6 +95,15 @@ export default function HomePage() {
           <div className="mt-10 grid gap-6 sm:grid-cols-3">
             {featuredScholarships.map((s, i) => {
               const isFeatured = i === 1;
+              const flag = countryFlags[s.country] ?? "🌍";
+              const level = s.academicLevels.join(", ");
+              const deadline = s.deadline
+                ? new Date(s.deadline).toLocaleDateString("fr-FR", {
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric",
+                  })
+                : "Non précisée";
               return (
                 <Card
                   key={s.id}
@@ -120,7 +114,7 @@ export default function HomePage() {
                   }`}
                 >
                   {/* Corner flag */}
-                  <span className="absolute top-3 right-3 text-2xl">{s.flag}</span>
+                  <span className="absolute top-3 right-3 text-2xl">{flag}</span>
 
                   <CardContent className="pt-5 pb-6 pr-12">
                     {/* Badges */}
@@ -129,13 +123,8 @@ export default function HomePage() {
                         variant="outline"
                         className="text-[var(--primary)] border-[var(--primary)] text-xs"
                       >
-                        {s.type}
+                        {s.isFullFunding ? "Bourse complète" : "Bourse"}
                       </Badge>
-                      {s.urgent && (
-                        <Badge className="bg-[var(--orange)] text-white border-0 text-xs">
-                          toi tu connais oub!
-                        </Badge>
-                      )}
                     </div>
 
                     {/* Name */}
@@ -152,11 +141,11 @@ export default function HomePage() {
                       </li>
                       <li className="flex items-center gap-2">
                         <GraduationCap size={14} className="text-[var(--orange)] shrink-0" />
-                        {s.level}
+                        {level}
                       </li>
                       <li className="flex items-center gap-2">
                         <CalendarDays size={14} className="text-[var(--orange)] shrink-0" />
-                        Date limite : {s.deadline}
+                        Date limite : {deadline}
                       </li>
                     </ul>
 
