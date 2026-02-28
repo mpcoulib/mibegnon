@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { SaveButton } from "@/components/save-button";
 import type { Scholarship } from "@prisma/client";
+import { categoryInfo } from "@/lib/category-info";
 
 const levelLabels: Record<string, string> = {
   BACHELOR: "Licence", MASTER: "Master", DOCTORAT: "Doctorat",
@@ -60,6 +61,7 @@ export function ScholarshipCard({
   const flag = getFlag(s.country);
   const urgent = isUrgent(s.deadline);
   const levels = s.academicLevels.map((l) => levelLabels[l] ?? l).join(", ");
+  const cat = s.category ? categoryInfo[s.category] : null;
 
   return (
     <Card
@@ -71,22 +73,24 @@ export function ScholarshipCard({
     >
       <span className="absolute top-3 right-3 text-2xl">{flag}</span>
 
-      {s.category === "mastercard" && (
+      {cat && (
         <Link
-          href="/bourses?category=mastercard"
-          className="absolute top-3 left-3 flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold text-white shadow-sm"
-          style={{ background: "linear-gradient(135deg, #eb001b 0%, #f79e1b 100%)" }}
-          title="Les bourses Mastercard"
+          href={`/bourses?category=${s.category}`}
+          className="absolute top-3 left-3 flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold text-white shadow-sm truncate max-w-[55%]"
+          style={{ background: cat.bg }}
+          title={cat.label}
         >
-          <span className="flex items-center gap-0.5">
-            <span className="inline-block h-3 w-3 rounded-full bg-[#eb001b] opacity-90" />
-            <span className="-ml-1.5 inline-block h-3 w-3 rounded-full bg-[#f79e1b] opacity-90" />
-          </span>
-          Mastercard Foundation
+          {s.category === "mastercard" && (
+            <span className="flex items-center shrink-0">
+              <span className="inline-block h-2.5 w-2.5 rounded-full bg-[#eb001b] opacity-90" />
+              <span className="-ml-1 inline-block h-2.5 w-2.5 rounded-full bg-[#f79e1b] opacity-90" />
+            </span>
+          )}
+          {cat.label}
         </Link>
       )}
 
-      <CardContent className={`pt-5 pb-6 pr-12 ${s.category === "mastercard" ? "mt-6" : ""}`}>
+      <CardContent className={`pt-5 pb-6 pr-12 ${cat ? "mt-6" : ""}`}>
         <div className="flex flex-wrap gap-2 mb-3">
           <Badge
             variant="outline"

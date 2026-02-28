@@ -3,6 +3,7 @@ import { ScholarshipCard } from "@/components/scholarship-card";
 import { BoursesFilters } from "@/components/bourses-filters";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
+import { categoryInfo } from "@/lib/category-info";
 
 export default async function BoursesPage({
   searchParams,
@@ -39,8 +40,7 @@ export default async function BoursesPage({
       { isFullFunding: "desc" },
       { amount: "desc" },
       { deadline: "asc" },
-    ],
-    take: 100,
+    ]
   });
 
   const supabase = await createClient();
@@ -74,6 +74,25 @@ export default async function BoursesPage({
         <Suspense fallback={<div className="h-24 rounded-xl bg-slate-100 animate-pulse" />}>
           <BoursesFilters />
         </Suspense>
+
+        {params.category && categoryInfo[params.category] && (
+          <div className="mt-6 rounded-2xl overflow-hidden border border-slate-200 shadow-sm">
+            <div
+              className="px-6 py-4 text-white"
+              style={{ background: categoryInfo[params.category].bg }}
+            >
+              <p className="text-xs font-semibold uppercase tracking-widest opacity-80 mb-1">
+                Programme
+              </p>
+              <h2 className="text-lg font-bold">{categoryInfo[params.category].label}</h2>
+            </div>
+            <div className="bg-white px-6 py-4">
+              <p className="text-sm text-slate-600 leading-relaxed">
+                {categoryInfo[params.category].description}
+              </p>
+            </div>
+          </div>
+        )}
 
         <p className="mt-6 mb-4 text-sm text-slate-500">
           {scholarships.length} bourse{scholarships.length > 1 ? "s" : ""} trouvée

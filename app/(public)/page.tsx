@@ -1,32 +1,11 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  MapPin,
-  GraduationCap,
-  CalendarDays,
-  User,
-  Search,
-  Send,
-  Sparkles,
-} from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { User, Search, Send, Sparkles } from "lucide-react";
 import { prisma } from "@/lib/prisma";
-
-const countryFlags: Record<string, string> = {
-  "France": "🇫🇷", "Germany": "🇩🇪", "United Kingdom": "🇬🇧", "UK": "🇬🇧",
-  "USA": "🇺🇸", "United States": "🇺🇸", "Canada": "🇨🇦", "Australia": "🇦🇺",
-  "Japan": "🇯🇵", "China": "🇨🇳", "South Korea": "🇰🇷",
-  "Turkey": "🇹🇷", "Switzerland": "🇨🇭", "Netherlands": "🇳🇱",
-  "Sweden": "🇸🇪", "Norway": "🇳🇴", "Denmark": "🇩🇰",
-  "Belgium": "🇧🇪", "Italy": "🇮🇹", "Spain": "🇪🇸", "Portugal": "🇵🇹",
-  "India": "🇮🇳", "Brazil": "🇧🇷", "South Africa": "🇿🇦",
-  "Nigeria": "🇳🇬", "Ghana": "🇬🇭", "Kenya": "🇰🇪", "Rwanda": "🇷🇼",
-  "Senegal": "🇸🇳", "Côte d'Ivoire": "🇨🇮", "Morocco": "🇲🇦",
-  "Egypt": "🇪🇬", "Ethiopia": "🇪🇹", "Cameroon": "🇨🇲",
-  "International": "🌍",
-};
+import { ScholarshipCard } from "@/components/scholarship-card";
 
 export default async function HomePage() {
   const featuredScholarships = await prisma.scholarship.findMany({
@@ -93,78 +72,9 @@ export default async function HomePage() {
           </p>
 
           <div className="mt-10 grid gap-6 sm:grid-cols-3">
-            {featuredScholarships.map((s, i) => {
-              const isFeatured = i === 1;
-              const flag = countryFlags[s.country] ?? "🌍";
-              const level = s.academicLevels.join(", ");
-              const deadline = s.deadline
-                ? new Date(s.deadline).toLocaleDateString("fr-FR", {
-                    day: "numeric",
-                    month: "long",
-                    year: "numeric",
-                  })
-                : "Non précisée";
-              return (
-                <Card
-                  key={s.id}
-                  className={`relative overflow-hidden transition-shadow hover:shadow-lg ${
-                    isFeatured
-                      ? "border-[var(--primary)] shadow-md scale-[1.02]"
-                      : "border-slate-200 shadow-sm"
-                  }`}
-                >
-                  {/* Corner flag */}
-                  <span className="absolute top-3 right-3 text-2xl">{flag}</span>
-
-                  <CardContent className="pt-5 pb-6 pr-12">
-                    {/* Badges */}
-                    <div className="flex flex-wrap gap-2 mb-3">
-                      <Badge
-                        variant="outline"
-                        className="text-[var(--primary)] border-[var(--primary)] text-xs"
-                      >
-                        {s.isFullFunding ? "Bourse complète" : "Bourse"}
-                      </Badge>
-                    </div>
-
-                    {/* Name */}
-                    <h3 className="font-bold text-[var(--primary)] leading-snug">
-                      {s.name}
-                    </h3>
-                    <p className="mt-1 text-sm text-slate-500">{s.provider}</p>
-
-                    {/* Meta */}
-                    <ul className="mt-4 space-y-1.5 text-sm text-slate-600">
-                      <li className="flex items-center gap-2">
-                        <MapPin size={14} className="text-[var(--orange)] shrink-0" />
-                        {s.country}
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <GraduationCap size={14} className="text-[var(--orange)] shrink-0" />
-                        {level}
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <CalendarDays size={14} className="text-[var(--orange)] shrink-0" />
-                        Date limite : {deadline}
-                      </li>
-                    </ul>
-
-                    {/* CTA */}
-                    <Button
-                      asChild
-                      size="sm"
-                      className={`mt-5 w-full ${
-                        isFeatured
-                          ? "bg-[var(--primary)] text-white hover:bg-[var(--primary)]/90"
-                          : "bg-transparent border border-[var(--primary)] text-[var(--primary)] hover:bg-[var(--primary)]/10"
-                      }`}
-                    >
-                      <Link href={`/bourses/${s.id}`}>Voir les détails</Link>
-                    </Button>
-                  </CardContent>
-                </Card>
-              );
-            })}
+            {featuredScholarships.map((s, i) => (
+              <ScholarshipCard key={s.id} scholarship={s} featured={i === 1} />
+            ))}
           </div>
 
           <div className="mt-10 text-center">
