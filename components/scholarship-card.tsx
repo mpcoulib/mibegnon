@@ -100,7 +100,7 @@ export function ScholarshipCard({
           </Badge>
           {urgent && (
             <Badge className="bg-[var(--orange)] text-white border-0 text-xs">
-              toi tu connais oub!
+              Clôture bientôt
             </Badge>
           )}
         </div>
@@ -121,7 +121,9 @@ export function ScholarshipCard({
           )}
           <li className="flex items-center gap-2">
             <CalendarDays size={14} className="text-[var(--orange)] shrink-0" />
-            Date limite : {formatDeadline(s.deadline)}
+            {s.category === "mastercard" && !s.deadline
+              ? "Date limite selon l'université"
+              : `Date limite : ${formatDeadline(s.deadline)}`}
           </li>
         </ul>
 

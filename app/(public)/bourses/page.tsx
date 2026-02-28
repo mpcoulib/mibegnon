@@ -37,6 +37,7 @@ export default async function BoursesPage({
   const scholarships = await prisma.scholarship.findMany({
     where,
     orderBy: [
+      { category: { sort: "asc", nulls: "last" } },
       { isFullFunding: "desc" },
       { amount: "desc" },
       { deadline: "asc" },

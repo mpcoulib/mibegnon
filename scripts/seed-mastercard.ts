@@ -120,7 +120,7 @@ const scholarships: Prisma.ScholarshipCreateInput[] = [
       description: "Bourse entièrement financée à Sciences Po Paris pour des étudiants africains en master. Sciences Po est l'une des meilleures institutions de sciences politiques au monde.",
       requirements: "Être citoyen d'un pays africain. Admission à Sciences Po. Excellents résultats académiques. Besoins financiers démontrés.",
       category: "mastercard",
-      link: "https://www.sciencespo.fr/admissions/en/content/mastercard-foundation-scholars-program.html",
+      link: "https://www.sciencespo.fr/students/en/fees-funding/bursaries-financial-aid/mastercard-foundation-scholarships/",
       isTranslated: true,
     },
     {
