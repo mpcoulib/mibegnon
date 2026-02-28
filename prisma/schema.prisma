@@ -62,6 +62,7 @@ model Scholarship {
   fields         String[]  // e.g. ["Informatique", "Médecine"]
   description    String    @db.Text
   requirements   String?   @db.Text
+  category       String?  @db.Text
   link             String
   isActive         Boolean   @default(true)
   ivoirianEligible Boolean   @default(true)

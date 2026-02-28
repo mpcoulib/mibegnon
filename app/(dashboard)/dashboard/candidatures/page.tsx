@@ -8,7 +8,7 @@ export default function CandidaturesPage() {
       <div>
         <h1 className="text-2xl font-bold text-[var(--primary)]">Mes candidatures</h1>
         <p className="mt-1 text-sm text-slate-500">
-          Suis l&apos;avancement de tes candidatures.
+          Suis la progression de tes candidatures.
         </p>
       </div>
 
