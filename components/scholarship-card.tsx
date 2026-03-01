@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { SaveButton } from "@/components/save-button";
 import type { Scholarship } from "@prisma/client";
 import { categoryInfo } from "@/lib/category-info";
+import { Globe2 } from "lucide-react";
 
 const levelLabels: Record<string, string> = {
   BACHELOR: "Licence", MASTER: "Master", DOCTORAT: "Doctorat",
@@ -71,7 +72,10 @@ export function ScholarshipCard({
           : "border-slate-200 shadow-sm"
       }`}
     >
-      <span className="absolute top-3 right-3 text-2xl">{flag}</span>
+     {flag === "🌍"
+  ? <Globe2 size={22} className="absolute top-3 right-3 text-slate-400" />
+  : <span className="absolute top-3 right-3 text-2xl">{flag}</span>
+}
 
       {cat && (
         <Link
