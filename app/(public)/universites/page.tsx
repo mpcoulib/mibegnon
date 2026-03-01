@@ -1,7 +1,7 @@
-import { Suspense } from "react";
 import { UniversityCard } from "@/components/university-card";
 import { UniversitesFilters } from "@/components/universites-filters";
-import { universities, filterUniversities } from "@/lib/mock-data";
+import { prisma } from "@/lib/prisma";
+import { Suspense } from "react";
 
 export default async function UniversitesPage({
   searchParams,
@@ -9,11 +9,27 @@ export default async function UniversitesPage({
   searchParams: Promise<{ pays?: string; q?: string }>;
 }) {
   const params = await searchParams;
-  const results = filterUniversities(universities, params);
+
+  const where: object = {
+    isActive: true,
+    ...(params.pays ? { country: params.pays } : {}),
+    ...(params.q
+      ? {
+          OR: [
+            { name: { contains: params.q, mode: "insensitive" } },
+            { country: { contains: params.q, mode: "insensitive" } },
+          ],
+        }
+      : {}),
+  };
+
+  const universities = await prisma.university.findMany({
+    where,
+    orderBy: { ranking: "asc" },
+  });
 
   return (
     <div className="flex flex-col">
-      {/* Page header */}
       <section className="bg-[var(--primary)] px-6 py-14 text-white">
         <div className="mx-auto max-w-6xl">
           <p className="text-sm font-medium text-white/60 uppercase tracking-widest mb-2">
@@ -26,23 +42,19 @@ export default async function UniversitesPage({
         </div>
       </section>
 
-      {/* Content */}
       <div className="mx-auto w-full max-w-6xl px-6 py-10">
-        {/* Filters */}
         <Suspense fallback={<div className="h-24 rounded-xl bg-slate-100 animate-pulse" />}>
           <UniversitesFilters />
         </Suspense>
 
-        {/* Results count */}
         <p className="mt-6 mb-4 text-sm text-slate-500">
-          {results.length} université{results.length > 1 ? "s" : ""} trouvée
-          {results.length > 1 ? "s" : ""}
+          {universities.length} université{universities.length > 1 ? "s" : ""} trouvée
+          {universities.length > 1 ? "s" : ""}
         </p>
 
-        {/* Grid */}
-        {results.length > 0 ? (
+        {universities.length > 0 ? (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {results.map((u) => (
+            {universities.map((u) => (
               <UniversityCard key={u.id} university={u} />
             ))}
           </div>

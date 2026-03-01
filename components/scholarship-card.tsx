@@ -7,6 +7,8 @@ import { SaveButton } from "@/components/save-button";
 import type { Scholarship } from "@prisma/client";
 import { categoryInfo } from "@/lib/category-info";
 import { Globe2 } from "lucide-react";
+import { getCountryPath } from "@/lib/country-map";
+
 
 const levelLabels: Record<string, string> = {
   BACHELOR: "Licence", MASTER: "Master", DOCTORAT: "Doctorat",
@@ -59,6 +61,7 @@ export function ScholarshipCard({
   featured?: boolean;
   isSaved?: boolean;
 }) {
+  const countryPath = getCountryPath(s.country);
   const flag = getFlag(s.country);
   const urgent = isUrgent(s.deadline);
   const levels = s.academicLevels.map((l) => levelLabels[l] ?? l).join(", ");
@@ -72,6 +75,15 @@ export function ScholarshipCard({
           : "border-slate-200 shadow-sm"
       }`}
     >
+  {countryPath && (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 200 130"
+      className="absolute top-0 right-0 w-36 h-24 opacity-[0.06] pointer-events-none select-none text-slate-800"
+    >
+      <path d={countryPath} fill="currentColor" />
+    </svg>
+  )}
      {flag === "🌍"
   ? <Globe2 size={22} className="absolute top-3 right-3 text-slate-400" />
   : <span className="absolute top-3 right-3 text-2xl">{flag}</span>
@@ -114,17 +126,24 @@ export function ScholarshipCard({
 
         <ul className="mt-4 space-y-1.5 text-sm text-slate-600">
           <li className="flex items-center gap-2">
-            <MapPin size={14} className="text-[var(--orange)] shrink-0" />
+          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[var(--orange)]/10 shrink-0">
+      <MapPin size={13} className="text-[var(--orange)]" />
+</span>
+
             {s.country}
           </li>
           {levels && (
             <li className="flex items-center gap-2">
-              <GraduationCap size={14} className="text-[var(--orange)] shrink-0" />
+              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[var(--orange)]/10 shrink-0">
+                <GraduationCap size={13} className="text-[var(--orange)]" />
+              </span>
               {levels}
             </li>
           )}
           <li className="flex items-center gap-2">
-            <CalendarDays size={14} className="text-[var(--orange)] shrink-0" />
+            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[var(--orange)]/10 shrink-0">
+              <CalendarDays size={13} className="text-[var(--orange)]" />
+            </span>
             {s.category === "mastercard" && !s.deadline
               ? "Date limite selon l'université"
               : `Date limite : ${formatDeadline(s.deadline)}`}

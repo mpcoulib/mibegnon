@@ -1,13 +1,26 @@
 import Link from "next/link";
-import { MapPin, Trophy, BookOpen } from "lucide-react";
+import { MapPin, Trophy, BookOpen, Globe2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import type { University } from "@/lib/mock-data";
+import type { University } from "@prisma/client";
+
+const countryFlags: Record<string, string> = {
+  "France": "🇫🇷", "Germany": "🇩🇪", "Allemagne": "🇩🇪",
+  "United Kingdom": "🇬🇧", "Royaume-Uni": "🇬🇧", "UK": "🇬🇧",
+  "USA": "🇺🇸", "United States": "🇺🇸", "Canada": "🇨🇦",
+  "Australia": "🇦🇺", "Switzerland": "🇨🇭", "Suisse": "🇨🇭",
+  "South Africa": "🇿🇦", "Afrique du Sud": "🇿🇦",
+};
 
 export function UniversityCard({ university: u }: { university: University }) {
+  const flag = countryFlags[u.country];
+
   return (
     <Card className="relative overflow-hidden border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-      <span className="absolute top-3 right-3 text-2xl">{u.flag}</span>
+      {flag
+        ? <span className="absolute top-3 right-3 text-2xl">{flag}</span>
+        : <Globe2 size={22} className="absolute top-3 right-3 text-slate-400" />
+      }
 
       <CardContent className="pt-5 pb-6 pr-12">
         {u.ranking && (
@@ -26,15 +39,13 @@ export function UniversityCard({ university: u }: { university: University }) {
             <MapPin size={14} className="text-[var(--orange)] shrink-0" />
             {u.country}
           </li>
-          <li className="flex items-start gap-2">
-            <BookOpen size={14} className="text-[var(--orange)] shrink-0 mt-0.5" />
-            <span className="line-clamp-2">{u.fields.slice(0, 3).join(", ")}</span>
-          </li>
+          {u.fields.length > 0 && (
+            <li className="flex items-start gap-2">
+              <BookOpen size={14} className="text-[var(--orange)] shrink-0 mt-0.5" />
+              <span className="line-clamp-2">{u.fields.slice(0, 3).join(", ")}</span>
+            </li>
+          )}
         </ul>
-
-        <p className="mt-3 text-xs text-slate-500 font-medium">
-          Frais : {u.tuition.split("·")[0].trim()}
-        </p>
 
         <Button
           asChild
