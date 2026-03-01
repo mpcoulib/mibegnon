@@ -144,9 +144,7 @@ export default async function HomePage() {
       {/* ── CTA banner ── */}
       <section className="bg-secondary/20 px-6 py-20 text-center">
         <div className="mx-auto max-w-xl">
-          <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full border border-slate-200 bg-white shadow-sm">
-            <Sparkles size={24} className="text-[var(--primary)]" />
-          </div>
+    
           <h2 className="text-3xl font-bold text-[var(--primary)]">
             Prêt à commencer ton voyage vers l&apos;excellence ?
           </h2>

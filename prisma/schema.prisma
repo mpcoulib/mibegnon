@@ -156,3 +156,23 @@ model Document {
 
   @@map("documents")
 }
+
+
+
+model ScholarshipSubmission {
+  id             String    @id @default(cuid())
+  name           String
+  provider       String
+  country        String
+  link           String
+  academicLevels String[]
+  isFullFunding  Boolean   @default(false)
+  deadline       DateTime?
+  description    String    @db.Text
+  submitterEmail String?
+  submitterNote  String?   @db.Text
+  status         String    @default("pending")
+  createdAt      DateTime  @default(now())
+
+  @@map("scholarship_submissions")
+}
