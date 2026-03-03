@@ -4,12 +4,14 @@ import { BoursesFilters } from "@/components/bourses-filters";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { categoryInfo } from "@/lib/category-info";
+import { getTranslations } from "next-intl/server";
 
 export default async function BoursesPage({
   searchParams,
 }: {
   searchParams: Promise<{ type?: string; niveau?: string; q?: string; category?: string }>;
 }) {
+  const t = await getTranslations("bourses");
   const params = await searchParams;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -19,9 +21,7 @@ export default async function BoursesPage({
     isTranslated: true,
     ...(params.type === "funded" ? { isFullFunding: true } : {}),
     ...(params.type === "partial" ? { isFullFunding: false } : {}),
-    ...(params.niveau
-      ? { academicLevels: { has: params.niveau } }
-      : {}),
+    ...(params.niveau ? { academicLevels: { has: params.niveau } } : {}),
     ...(params.category ? { category: params.category } : {}),
     ...(params.q
       ? {
@@ -60,17 +60,19 @@ export default async function BoursesPage({
     savedIds = saved.map((s: { scholarshipId: string }) => s.scholarshipId);
   }
 
+  const tCommon = await getTranslations("common");
+
   return (
     <div className="flex flex-col">
       {/* Page header */}
       <section className="bg-[var(--primary)] px-6 py-14 text-white">
         <div className="mx-auto max-w-6xl">
           <p className="text-sm font-medium text-white/60 uppercase tracking-widest mb-2">
-            Opportunités
+            {t("badge")}
           </p>
-          <h1 className="text-4xl font-bold">Toutes les bourses</h1>
+          <h1 className="text-4xl font-bold">{t("title")}</h1>
           <p className="mt-2 text-white/70">
-            {scholarships.length} bourse{scholarships.length > 1 ? "s" : ""} disponible{scholarships.length > 1 ? "s" : ""}
+            {t("count", { count: scholarships.length })}
           </p>
         </div>
       </section>
@@ -88,7 +90,7 @@ export default async function BoursesPage({
               style={{ background: categoryInfo[params.category].bg }}
             >
               <p className="text-xs font-semibold uppercase tracking-widest opacity-80 mb-1">
-                Programme
+                {t("program")}
               </p>
               <h2 className="text-lg font-bold">{categoryInfo[params.category].label}</h2>
             </div>
@@ -101,8 +103,7 @@ export default async function BoursesPage({
         )}
 
         <p className="mt-6 mb-4 text-sm text-slate-500">
-          {scholarships.length} bourse{scholarships.length > 1 ? "s" : ""} trouvée
-          {scholarships.length > 1 ? "s" : ""}
+          {t("found", { count: scholarships.length })}
         </p>
 
         {scholarships.length > 0 ? (
@@ -114,10 +115,8 @@ export default async function BoursesPage({
         ) : (
           <div className="mt-16 text-center">
             <p className="text-2xl">🔍</p>
-            <p className="mt-3 font-semibold text-slate-700">Ijioh ! Aucun résultat dêh...</p>
-            <p className="mt-1 text-sm text-slate-500">
-              Essaie de modifier tes filtres ou de changer ta recherche. Ça va aller !
-            </p>
+            <p className="mt-3 font-semibold text-slate-700">{tCommon("noResults")}</p>
+            <p className="mt-1 text-sm text-slate-500">{tCommon("noResultsHint")}</p>
           </div>
         )}
       </div>

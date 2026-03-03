@@ -1,9 +1,11 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 
-export default function AuthLayout({ children }: { children: React.ReactNode }) {
+export default async function AuthLayout({ children }: { children: React.ReactNode }) {
+  const t = await getTranslations("authLayout");
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Minimal header */}
       <header className="px-6 py-4 border-b border-slate-100">
         <Link href="/" className="flex items-center gap-2 w-fit">
           <svg viewBox="0 0 32 36" fill="none" className="h-7 w-7 text-[var(--gold)]" aria-hidden="true">
@@ -14,14 +16,12 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         </Link>
       </header>
 
-      {/* Page content */}
       <main className="flex-1 flex items-center justify-center px-4 py-12">
         {children}
       </main>
 
-      {/* Footer note */}
       <footer className="py-4 text-center text-xs text-slate-400">
-        © {new Date().getFullYear()} Mibegnon · Gratuit pour tous les élèves ivoiriens
+        {t("footer", { year: new Date().getFullYear() })}
       </footer>
     </div>
   );

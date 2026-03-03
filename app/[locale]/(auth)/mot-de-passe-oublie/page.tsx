@@ -1,12 +1,14 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { forgotPassword } from "../actions";
+import { getTranslations } from "next-intl/server";
 
 export default async function MotDePasseOubliePage({
   searchParams,
 }: {
   searchParams: Promise<{ error?: string; success?: string }>;
 }) {
+  const t = await getTranslations("forgotPassword");
   const { error, success } = await searchParams;
 
   return (
@@ -17,16 +19,12 @@ export default async function MotDePasseOubliePage({
           className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-[var(--primary)] transition-colors mb-6"
         >
           <ArrowLeft size={14} />
-          Retour à la connexion
+          {t("backToLogin")}
         </Link>
 
         <div className="mb-8">
-          <h1 className="text-2xl font-bold text-[var(--primary)]">
-            Mot de passe oublié ?
-          </h1>
-          <p className="mt-1 text-sm text-slate-500">
-            Entre ton adresse email et on t&apos;envoie un lien de réinitialisation.
-          </p>
+          <h1 className="text-2xl font-bold text-[var(--primary)]">{t("title")}</h1>
+          <p className="mt-1 text-sm text-slate-500">{t("subtitle")}</p>
         </div>
 
         {error && (
@@ -43,7 +41,7 @@ export default async function MotDePasseOubliePage({
         <form action={forgotPassword} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">
-              Adresse email
+              {t("emailLabel")}
             </label>
             <input
               type="email"
@@ -58,7 +56,7 @@ export default async function MotDePasseOubliePage({
             type="submit"
             className="w-full rounded-lg bg-[var(--primary)] py-2.5 text-sm font-semibold text-white hover:bg-[var(--primary)]/90 transition-colors"
           >
-            Envoyer le lien de réinitialisation
+            {t("submit")}
           </button>
         </form>
       </div>

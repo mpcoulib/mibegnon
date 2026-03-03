@@ -2,19 +2,18 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter, usePathname } from "next/navigation";
 import { Menu, X, LayoutDashboard, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { signOut } from "@/app/(auth)/actions";
+import { signOut } from "@/app/[locale]/(auth)/actions";
+import { useTranslations, useLocale } from "next-intl";
 import type { User } from "@supabase/supabase-js";
 
-const navLinks = [
-  { href: "/", label: "Accueil" },
-  { href: "/bourses", label: "Bourses" },
-  { href: "/universites", label: "Universités" },
-  { href: "/soumettre", label: "Nous soumettre une opeortunite de bourse" },
-];
-
 export default function Navbar({ user }: { user: User | null }) {
+  const t = useTranslations("nav");
+  const locale = useLocale();
+  const router = useRouter();
+  const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -25,6 +24,21 @@ export default function Navbar({ user }: { user: User | null }) {
     .join("")
     .toUpperCase()
     .slice(0, 2) || "?";
+
+  const switchLocale = (newLocale: string) => {
+    const strippedPath = pathname.startsWith(`/${locale}`)
+      ? pathname.slice(`/${locale}`.length) || "/"
+      : pathname;
+    const newPath = newLocale === "fr" ? strippedPath : `/${newLocale}${strippedPath}`;
+    router.push(newPath);
+  };
+
+  const navLinks = [
+    { href: "/", label: t("home") },
+    { href: "/bourses", label: t("scholarships") },
+    { href: "/universites", label: t("universities") },
+    { href: "/soumettre", label: t("submit") },
+  ];
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-[var(--primary)]/20 bg-white/95 backdrop-blur">
@@ -47,8 +61,24 @@ export default function Navbar({ user }: { user: User | null }) {
           ))}
         </nav>
 
-        {/* Desktop CTA */}
+        {/* Desktop CTA + Language switcher */}
         <div className="hidden md:flex items-center gap-3">
+          {/* Language switcher */}
+          <div className="flex items-center gap-1 text-xs font-medium text-slate-500 border border-slate-200 rounded-full px-2 py-1">
+            <button
+              onClick={() => switchLocale("fr")}
+              className={`px-1.5 py-0.5 rounded-full transition-colors ${locale === "fr" ? "bg-[var(--primary)] text-white" : "hover:text-[var(--primary)]"}`}
+            >
+              FR
+            </button>
+            <button
+              onClick={() => switchLocale("en")}
+              className={`px-1.5 py-0.5 rounded-full transition-colors ${locale === "en" ? "bg-[var(--primary)] text-white" : "hover:text-[var(--primary)]"}`}
+            >
+              EN
+            </button>
+          </div>
+
           {user ? (
             <div className="relative">
               <button
@@ -70,7 +100,7 @@ export default function Navbar({ user }: { user: User | null }) {
                     onClick={() => setMenuOpen(false)}
                     className="flex items-center gap-2.5 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
                   >
-                    <LayoutDashboard size={14} /> Mon tableau de bord
+                    <LayoutDashboard size={14} /> {t("dashboard")}
                   </Link>
                   <div className="my-1 border-t border-slate-100" />
                   <form action={signOut}>
@@ -78,7 +108,7 @@ export default function Navbar({ user }: { user: User | null }) {
                       type="submit"
                       className="flex w-full items-center gap-2.5 px-4 py-2 text-sm text-red-600 hover:bg-red-50"
                     >
-                      <LogOut size={14} /> Se déconnecter
+                      <LogOut size={14} /> {t("logout")}
                     </button>
                   </form>
                 </div>
@@ -86,7 +116,7 @@ export default function Navbar({ user }: { user: User | null }) {
             </div>
           ) : (
             <Button asChild size="sm">
-              <Link href="/connexion">Se connecter</Link>
+              <Link href="/connexion">{t("login")}</Link>
             </Button>
           )}
         </div>
@@ -95,7 +125,7 @@ export default function Navbar({ user }: { user: User | null }) {
         <button
           className="md:hidden p-2 rounded-md text-slate-600 hover:text-[var(--primary)] hover:bg-slate-100 transition-colors"
           onClick={() => setIsOpen(!isOpen)}
-          aria-label="Menu"
+          aria-label={t("menu")}
         >
           {isOpen ? <X size={22} /> : <Menu size={22} />}
         </button>
@@ -116,7 +146,24 @@ export default function Navbar({ user }: { user: User | null }) {
               </Link>
             ))}
           </nav>
-          <div className="mt-3 pt-3 border-t border-slate-100">
+          <div className="mt-3 pt-3 border-t border-slate-100 space-y-2">
+            {/* Language switcher mobile */}
+            <div className="flex items-center gap-2 px-3 py-1">
+              <span className="text-xs text-slate-400">Language:</span>
+              <button
+                onClick={() => { switchLocale("fr"); setIsOpen(false); }}
+                className={`text-xs px-2 py-0.5 rounded-full border transition-colors ${locale === "fr" ? "bg-[var(--primary)] text-white border-[var(--primary)]" : "border-slate-200 text-slate-500"}`}
+              >
+                FR
+              </button>
+              <button
+                onClick={() => { switchLocale("en"); setIsOpen(false); }}
+                className={`text-xs px-2 py-0.5 rounded-full border transition-colors ${locale === "en" ? "bg-[var(--primary)] text-white border-[var(--primary)]" : "border-slate-200 text-slate-500"}`}
+              >
+                EN
+              </button>
+            </div>
+
             {user ? (
               <div className="space-y-1">
                 <Link
@@ -124,21 +171,21 @@ export default function Navbar({ user }: { user: User | null }) {
                   onClick={() => setIsOpen(false)}
                   className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
                 >
-                  <LayoutDashboard size={14} /> Mon tableau de bord
+                  <LayoutDashboard size={14} /> {t("dashboard")}
                 </Link>
                 <form action={signOut}>
                   <button
                     type="submit"
                     className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50"
                   >
-                    <LogOut size={14} /> Se déconnecter
+                    <LogOut size={14} /> {t("logout")}
                   </button>
                 </form>
               </div>
             ) : (
               <Button asChild size="sm" className="w-full">
                 <Link href="/connexion" onClick={() => setIsOpen(false)}>
-                  Se connecter
+                  {t("login")}
                 </Link>
               </Button>
             )}

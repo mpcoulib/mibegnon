@@ -2,12 +2,15 @@ import { UniversityCard } from "@/components/university-card";
 import { UniversitesFilters } from "@/components/universites-filters";
 import { prisma } from "@/lib/prisma";
 import { Suspense } from "react";
+import { getTranslations } from "next-intl/server";
 
 export default async function UniversitesPage({
   searchParams,
 }: {
   searchParams: Promise<{ pays?: string; q?: string }>;
 }) {
+  const t = await getTranslations("universites");
+  const tCommon = await getTranslations("common");
   const params = await searchParams;
 
   const where: object = {
@@ -33,11 +36,11 @@ export default async function UniversitesPage({
       <section className="bg-[var(--primary)] px-6 py-14 text-white">
         <div className="mx-auto max-w-6xl">
           <p className="text-sm font-medium text-white/60 uppercase tracking-widest mb-2">
-            Destinations
+            {t("badge")}
           </p>
-          <h1 className="text-4xl font-bold">Universités mondiales</h1>
+          <h1 className="text-4xl font-bold">{t("title")}</h1>
           <p className="mt-2 text-white/70">
-            {universities.length} universités référencées : Europe, Amérique, Asie, Afrique
+            {t("subtitle", { count: universities.length })}
           </p>
         </div>
       </section>
@@ -48,8 +51,7 @@ export default async function UniversitesPage({
         </Suspense>
 
         <p className="mt-6 mb-4 text-sm text-slate-500">
-          {universities.length} université{universities.length > 1 ? "s" : ""} trouvée
-          {universities.length > 1 ? "s" : ""}
+          {t("found", { count: universities.length })}
         </p>
 
         {universities.length > 0 ? (
@@ -61,10 +63,8 @@ export default async function UniversitesPage({
         ) : (
           <div className="mt-16 text-center">
             <p className="text-2xl">🔍</p>
-            <p className="mt-3 font-semibold text-slate-700">Ijioh ! Aucun résultat dêh...</p>
-            <p className="mt-1 text-sm text-slate-500">
-              Essaie de modifier tes filtres ou de changer ta recherche. Ça va aller !
-            </p>
+            <p className="mt-3 font-semibold text-slate-700">{tCommon("noResults")}</p>
+            <p className="mt-1 text-sm text-slate-500">{tCommon("noResultsHint")}</p>
           </div>
         )}
       </div>

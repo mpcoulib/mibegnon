@@ -1,27 +1,22 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { signOut } from "@/app/(auth)/actions";
+import { signOut } from "@/app/[locale]/(auth)/actions";
 import { LayoutDashboard, Bookmark, ClipboardList, User, LogOut } from "lucide-react";
-
-const sidebarLinks = [
-  { href: "/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
-  { href: "/dashboard/favoris", label: "Mes favoris", icon: Bookmark },
-  { href: "/dashboard/candidatures", label: "Candidatures", icon: ClipboardList },
-  { href: "/dashboard/profil", label: "Mon profil", icon: User },
-];
+import { getTranslations } from "next-intl/server";
 
 export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const t = await getTranslations("dashboardLayout");
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) redirect("/connexion");
 
-  const name = user.user_metadata?.full_name ?? user.email ?? "Utilisateur";
+  const name = user.user_metadata?.full_name ?? user.email ?? t("user");
   const initials = name
     .split(" ")
     .map((n: string) => n[0])
@@ -29,9 +24,15 @@ export default async function DashboardLayout({
     .toUpperCase()
     .slice(0, 2);
 
+  const sidebarLinks = [
+    { href: "/dashboard", label: t("dashboard"), icon: LayoutDashboard },
+    { href: "/dashboard/favoris", label: t("favorites"), icon: Bookmark },
+    { href: "/dashboard/candidatures", label: t("applications"), icon: ClipboardList },
+    { href: "/dashboard/profil", label: t("profile"), icon: User },
+  ];
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Top bar */}
       <header className="sticky top-0 z-50 h-14 border-b border-slate-200 bg-white flex items-center justify-between px-6">
         <Link href="/" className="flex items-center gap-2">
           <svg viewBox="0 0 32 36" fill="none" className="h-7 w-7 text-[var(--gold)]" aria-hidden="true">
@@ -50,7 +51,6 @@ export default async function DashboardLayout({
       </header>
 
       <div className="flex flex-1">
-        {/* Sidebar */}
         <aside className="hidden md:flex flex-col w-56 border-r border-slate-200 bg-white px-3 py-6">
           <nav className="flex flex-col gap-1 flex-1">
             {sidebarLinks.map(({ href, label, icon: Icon }) => (
@@ -65,25 +65,22 @@ export default async function DashboardLayout({
             ))}
           </nav>
 
-          {/* Sign out */}
           <form action={signOut}>
             <button
               type="submit"
               className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-500 hover:bg-red-50 hover:text-red-600 transition-colors"
             >
               <LogOut size={16} />
-              Se déconnecter
+              {t("logout")}
             </button>
           </form>
         </aside>
 
-        {/* Main content */}
         <main className="flex-1 px-6 py-8 max-w-5xl w-full">
           {children}
         </main>
       </div>
 
-      {/* Mobile bottom nav */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 border-t border-slate-200 bg-white flex items-center justify-around px-2 py-2 z-50">
         {sidebarLinks.map(({ href, label, icon: Icon }) => (
           <Link

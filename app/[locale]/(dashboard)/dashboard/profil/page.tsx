@@ -1,15 +1,20 @@
 import { createClient } from "@/lib/supabase/server";
 import { User, Mail, Calendar } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { getTranslations } from "next-intl/server";
+import { getLocale } from "next-intl/server";
 
 export default async function ProfilPage() {
+  const t = await getTranslations("profil");
+  const locale = await getLocale();
+
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   const name = user?.user_metadata?.full_name ?? "—";
   const email = user?.email ?? "—";
   const createdAt = user?.created_at
-    ? new Date(user.created_at).toLocaleDateString("fr-FR", {
+    ? new Date(user.created_at).toLocaleDateString(locale, {
         year: "numeric",
         month: "long",
         day: "numeric",
@@ -26,11 +31,10 @@ export default async function ProfilPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-[var(--primary)]">Mon profil</h1>
-        <p className="mt-1 text-sm text-slate-500">Tes informations personnelles.</p>
+        <h1 className="text-2xl font-bold text-[var(--primary)]">{t("title")}</h1>
+        <p className="mt-1 text-sm text-slate-500">{t("subtitle")}</p>
       </div>
 
-      {/* Avatar card */}
       <Card className="border-slate-200">
         <CardContent className="pt-6">
           <div className="flex items-center gap-4">
@@ -39,13 +43,12 @@ export default async function ProfilPage() {
             </div>
             <div>
               <p className="text-lg font-semibold text-slate-800">{name}</p>
-              <p className="text-sm text-slate-500">Élève ivoirien 🇨🇮</p>
+              <p className="text-sm text-slate-500">{t("badge")}</p>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Info fields */}
       <Card className="border-slate-200">
         <CardContent className="pt-6 space-y-5">
           <div className="flex items-center gap-3">
@@ -53,7 +56,7 @@ export default async function ProfilPage() {
               <User size={16} className="text-[var(--primary)]" />
             </div>
             <div>
-              <p className="text-xs text-slate-400">Nom complet</p>
+              <p className="text-xs text-slate-400">{t("fullName")}</p>
               <p className="text-sm font-medium text-slate-700">{name}</p>
             </div>
           </div>
@@ -63,7 +66,7 @@ export default async function ProfilPage() {
               <Mail size={16} className="text-[var(--primary)]" />
             </div>
             <div>
-              <p className="text-xs text-slate-400">Adresse email</p>
+              <p className="text-xs text-slate-400">{t("email")}</p>
               <p className="text-sm font-medium text-slate-700">{email}</p>
             </div>
           </div>
@@ -73,16 +76,14 @@ export default async function ProfilPage() {
               <Calendar size={16} className="text-[var(--primary)]" />
             </div>
             <div>
-              <p className="text-xs text-slate-400">Membre depuis</p>
+              <p className="text-xs text-slate-400">{t("memberSince")}</p>
               <p className="text-sm font-medium text-slate-700">{createdAt}</p>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      <p className="text-xs text-center text-slate-400">
-        La modification du profil arrive bientôt. Ça va aller !
-      </p>
+      <p className="text-xs text-center text-slate-400">{t("editComingSoon")}</p>
     </div>
   );
 }
