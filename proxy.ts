@@ -1,9 +1,15 @@
+import createMiddleware from "next-intl/middleware";
+import { routing } from "./i18n/routing";
 import { createServerClient } from "@supabase/ssr";
-import { NextResponse, type NextRequest } from "next/server";
+import { type NextRequest } from "next/server";
 
-export default async function proxy(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({ request });
+const intlMiddleware = createMiddleware(routing);
 
+export default async function middleware(request: NextRequest) {
+  // 1. Run next-intl locale routing
+  const intlResponse = intlMiddleware(request);
+
+  // 2. Refresh Supabase session and copy cookies onto the intl response
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -13,26 +19,19 @@ export default async function proxy(request: NextRequest) {
           return request.cookies.getAll();
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value)
-          );
-          supabaseResponse = NextResponse.next({ request });
           cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
+            intlResponse.cookies.set(name, value, options)
           );
         },
       },
     }
   );
 
-  // Refresh the session — required for Server Components to read auth state
   await supabase.auth.getUser();
 
-  return supabaseResponse;
+  return intlResponse;
 }
 
 export const config = {
-  matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
-  ],
+  matcher: ["/((?!api|_next|_vercel|auth|.*\\..*).*)"],
 };

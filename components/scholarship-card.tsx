@@ -8,15 +8,10 @@ import type { Scholarship } from "@prisma/client";
 import { categoryInfo } from "@/lib/category-info";
 import { Globe2 } from "lucide-react";
 import { getCountryPath } from "@/lib/country-map";
-
-
-const levelLabels: Record<string, string> = {
-  BACHELOR: "Licence", MASTER: "Master", DOCTORAT: "Doctorat",
-  FELLOWSHIP: "Fellowship", SECONDARY: "Secondaire",
-};
+import { useTranslations } from "next-intl";
 
 const countryFlags: Record<string, string> = {
-  "France": "🇫🇷", "Germany": "🇩🇪", "Allemagne": "🇩🇪",
+  "France": "🇫��", "Germany": "🇩🇪", "Allemagne": "🇩🇪",
   "United Kingdom": "🇬🇧", "Royaume-Uni": "🇬🇧", "UK": "🇬🇧",
   "USA": "🇺🇸", "United States": "🇺🇸", "États-Unis": "🇺🇸",
   "Canada": "🇨🇦", "Australia": "🇦🇺", "Japan": "🇯🇵",
@@ -39,13 +34,6 @@ function getFlag(country: string): string {
   return countryFlags[country] ?? "🌍";
 }
 
-function formatDeadline(date: Date | null): string {
-  if (!date) return "Non précisée";
-  return new Date(date).toLocaleDateString("fr-FR", {
-    day: "numeric", month: "long", year: "numeric",
-  });
-}
-
 function isUrgent(date: Date | null): boolean {
   if (!date) return false;
   const diff = new Date(date).getTime() - Date.now();
@@ -61,11 +49,24 @@ export function ScholarshipCard({
   featured?: boolean;
   isSaved?: boolean;
 }) {
+  const t = useTranslations("bourses");
+  const tCommon = useTranslations("common");
+
   const countryPath = getCountryPath(s.country);
   const flag = getFlag(s.country);
   const urgent = isUrgent(s.deadline);
-  const levels = s.academicLevels.map((l) => levelLabels[l] ?? l).join(", ");
+  const levels = s.academicLevels
+    .map((l) => tCommon(`levels.${l}` as Parameters<typeof tCommon>[0]) ?? l)
+    .join(", ");
   const cat = s.category ? categoryInfo[s.category] : null;
+
+  const deadlineText = s.category === "mastercard" && !s.deadline
+    ? tCommon("deadlineByUniversity")
+    : `${tCommon("deadline")} : ${
+        s.deadline
+          ? new Date(s.deadline).toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" })
+          : tCommon("deadlineUnknown")
+      }`;
 
   return (
     <Card
@@ -75,19 +76,19 @@ export function ScholarshipCard({
           : "border-slate-200 shadow-sm"
       }`}
     >
-  {countryPath && (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 200 130"
-      className="absolute top-0 right-0 w-36 h-24 opacity-[0.06] pointer-events-none select-none text-slate-800"
-    >
-      <path d={countryPath} fill="currentColor" />
-    </svg>
-  )}
-     {flag === "🌍"
-  ? <Globe2 size={22} className="absolute top-3 right-3 text-slate-400" />
-  : <span className="absolute top-3 right-3 text-2xl">{flag}</span>
-}
+      {countryPath && (
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 200 130"
+          className="absolute top-0 right-0 w-36 h-24 opacity-[0.06] pointer-events-none select-none text-slate-800"
+        >
+          <path d={countryPath} fill="currentColor" />
+        </svg>
+      )}
+      {flag === "🌍"
+        ? <Globe2 size={22} className="absolute top-3 right-3 text-slate-400" />
+        : <span className="absolute top-3 right-3 text-2xl">{flag}</span>
+      }
 
       {cat && (
         <Link
@@ -108,15 +109,12 @@ export function ScholarshipCard({
 
       <CardContent className={`pt-5 pb-6 pr-12 ${cat ? "mt-6" : ""}`}>
         <div className="flex flex-wrap gap-2 mb-3">
-          <Badge
-            variant="outline"
-            className="text-[var(--primary)] border-[var(--primary)] text-xs"
-          >
-            {s.isFullFunding ? "Entièrement financée" : "Bourse"}
+          <Badge variant="outline" className="text-[var(--primary)] border-[var(--primary)] text-xs">
+            {s.isFullFunding ? tCommon("fullFunding") : tCommon("scholarship")}
           </Badge>
           {urgent && (
             <Badge className="bg-[var(--orange)] text-white border-0 text-xs">
-              Clôture bientôt
+              {tCommon("closingSoon")}
             </Badge>
           )}
         </div>
@@ -126,10 +124,9 @@ export function ScholarshipCard({
 
         <ul className="mt-4 space-y-1.5 text-sm text-slate-600">
           <li className="flex items-center gap-2">
-          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[var(--orange)]/10 shrink-0">
-      <MapPin size={13} className="text-[var(--orange)]" />
-</span>
-
+            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[var(--orange)]/10 shrink-0">
+              <MapPin size={13} className="text-[var(--orange)]" />
+            </span>
             {s.country}
           </li>
           {levels && (
@@ -144,9 +141,7 @@ export function ScholarshipCard({
             <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[var(--orange)]/10 shrink-0">
               <CalendarDays size={13} className="text-[var(--orange)]" />
             </span>
-            {s.category === "mastercard" && !s.deadline
-              ? "Date limite selon l'université"
-              : `Date limite : ${formatDeadline(s.deadline)}`}
+            {deadlineText}
           </li>
         </ul>
 
@@ -160,7 +155,7 @@ export function ScholarshipCard({
                 : "bg-transparent border border-[var(--primary)] text-[var(--primary)] hover:bg-[var(--primary)]/10"
             }`}
           >
-            <Link href={`/bourses/${s.id}`}>Voir les détails</Link>
+            <Link href={`/bourses/${s.id}`}>{t("viewDetails")}</Link>
           </Button>
           <SaveButton scholarshipId={s.id} isSaved={isSaved} />
         </div>

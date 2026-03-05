@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { updatePassword } from "@/app/(auth)/actions";
+import { updatePassword } from "@/app/[locale]/(auth)/actions";
 
 export default async function ResetPasswordPage({
   searchParams,

@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { Heart } from "lucide-react";
 import { toggleBookmark } from "@/lib/actions/bookmarks";
+import { useTranslations } from "next-intl";
 
 export function SaveButton({
   scholarshipId,
@@ -11,6 +12,7 @@ export function SaveButton({
   scholarshipId: string;
   isSaved: boolean;
 }) {
+  const t = useTranslations("saveButton");
   const [saved, setSaved] = useState(initial);
   const [isPending, start] = useTransition();
 
@@ -29,7 +31,7 @@ export function SaveButton({
           ? "border-red-200 bg-red-50 text-red-500 hover:bg-red-100"
           : "border-slate-200 bg-white text-slate-400 hover:text-red-400 hover:border-red-200"
       }`}
-      aria-label={saved ? "Retirer des favoris" : "Sauvegarder"}
+      aria-label={saved ? t("remove") : t("save")}
     >
       <Heart size={15} fill={saved ? "currentColor" : "none"} strokeWidth={2} />
     </button>

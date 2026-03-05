@@ -4,6 +4,7 @@ import { ArrowLeft, MapPin, Trophy, BookOpen, DollarSign, ExternalLink } from "l
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { universities } from "@/lib/mock-data";
+import { getTranslations } from "next-intl/server";
 
 export default async function UniversiteDetailPage({
   params,
@@ -11,8 +12,9 @@ export default async function UniversiteDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const university = universities.find((u) => u.id === id);
+  const t = await getTranslations("universiteDetail");
 
+  const university = universities.find((u) => u.id === id);
   if (!university) notFound();
   const u = university;
 
@@ -26,13 +28,13 @@ export default async function UniversiteDetailPage({
             className="inline-flex items-center gap-1.5 text-sm text-white/60 hover:text-white transition-colors mb-4"
           >
             <ArrowLeft size={14} />
-            Toutes les universités
+            {t("backToAll")}
           </Link>
           {u.ranking && (
             <div className="flex items-center gap-1.5 mb-3">
               <Trophy size={14} className="text-[var(--gold)]" />
               <span className="text-sm font-medium text-[var(--gold)]">
-                QS #{u.ranking} mondial
+                {t("ranking", { rank: u.ranking })}
               </span>
             </div>
           )}
@@ -51,7 +53,7 @@ export default async function UniversiteDetailPage({
             {/* Quick stats */}
             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 grid grid-cols-2 sm:grid-cols-3 gap-4">
               <div>
-                <p className="text-xs text-slate-500 mb-1">Pays</p>
+                <p className="text-xs text-slate-500 mb-1">{t("country")}</p>
                 <p className="font-semibold text-slate-800 flex items-center gap-1">
                   <MapPin size={13} className="text-[var(--orange)]" />
                   {u.country}
@@ -59,7 +61,7 @@ export default async function UniversiteDetailPage({
               </div>
               {u.ranking && (
                 <div>
-                  <p className="text-xs text-slate-500 mb-1">Classement QS</p>
+                  <p className="text-xs text-slate-500 mb-1">{t("qsRanking")}</p>
                   <p className="font-semibold text-slate-800 flex items-center gap-1">
                     <Trophy size={13} className="text-[var(--gold)]" />
                     #{u.ranking}
@@ -67,7 +69,7 @@ export default async function UniversiteDetailPage({
                 </div>
               )}
               <div>
-                <p className="text-xs text-slate-500 mb-1">Frais approximatifs</p>
+                <p className="text-xs text-slate-500 mb-1">{t("tuition")}</p>
                 <p className="font-semibold text-slate-800 flex items-center gap-1">
                   <DollarSign size={13} className="text-[var(--orange)]" />
                   {u.tuition.split("·")[0].trim()}
@@ -77,9 +79,7 @@ export default async function UniversiteDetailPage({
 
             {/* Description */}
             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-              <h2 className="text-lg font-bold text-[var(--primary)] mb-3">
-                À propos
-              </h2>
+              <h2 className="text-lg font-bold text-[var(--primary)] mb-3">{t("about")}</h2>
               <p className="text-slate-600 leading-relaxed">{u.description}</p>
             </div>
 
@@ -87,7 +87,7 @@ export default async function UniversiteDetailPage({
             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
               <h2 className="text-lg font-bold text-[var(--primary)] mb-3 flex items-center gap-2">
                 <BookOpen size={18} className="text-[var(--orange)]" />
-                Domaines d&apos;enseignement
+                {t("fields")}
               </h2>
               <div className="flex flex-wrap gap-2">
                 {u.fields.map((field) => (
@@ -100,9 +100,7 @@ export default async function UniversiteDetailPage({
 
             {/* Programs */}
             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-              <h2 className="text-lg font-bold text-[var(--primary)] mb-3">
-                Programmes disponibles
-              </h2>
+              <h2 className="text-lg font-bold text-[var(--primary)] mb-3">{t("programs")}</h2>
               <ul className="space-y-2">
                 {u.programs.map((prog, i) => (
                   <li key={i} className="flex items-start gap-2 text-sm text-slate-600">
@@ -120,53 +118,39 @@ export default async function UniversiteDetailPage({
           <div className="space-y-4">
             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sticky top-20">
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-4">
-                Informations pratiques
+                {t("practicalInfo")}
               </p>
 
               <div className="space-y-3 mb-6 text-sm text-slate-600">
                 <div className="flex justify-between">
-                  <span>Pays</span>
+                  <span>{t("country")}</span>
                   <span className="font-semibold text-slate-800">
                     {u.flag} {u.country}
                   </span>
                 </div>
                 {u.ranking && (
                   <div className="flex justify-between">
-                    <span>Classement QS</span>
+                    <span>{t("qsRanking")}</span>
                     <span className="font-semibold text-[var(--gold)]">#{u.ranking}</span>
                   </div>
                 )}
                 <div className="flex justify-between gap-4">
-                  <span className="shrink-0">Frais/an</span>
+                  <span className="shrink-0">{t("tuition")}</span>
                   <span className="font-semibold text-slate-800 text-right text-xs">
                     {u.tuition}
                   </span>
                 </div>
               </div>
 
-              <Button
-                asChild
-                className="w-full bg-[var(--primary)] text-white hover:bg-[var(--primary)]/90"
-              >
-                <a
-                  href={u.websiteUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2"
-                >
-                  Site officiel
+              <Button asChild className="w-full bg-[var(--primary)] text-white hover:bg-[var(--primary)]/90">
+                <a href={u.websiteUrl} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2">
+                  {t("officialSite")}
                   <ExternalLink size={14} />
                 </a>
               </Button>
 
-              <Button
-                asChild
-                variant="outline"
-                className="mt-3 w-full border-[var(--primary)] text-[var(--primary)] hover:bg-[var(--primary)]/10"
-              >
-                <Link href="/bourses">
-                  Voir les bourses pour ce pays
-                </Link>
+              <Button asChild variant="outline" className="mt-3 w-full border-[var(--primary)] text-[var(--primary)] hover:bg-[var(--primary)]/10">
+                <Link href="/bourses">{t("viewScholarships")}</Link>
               </Button>
             </div>
           </div>
@@ -175,14 +159,9 @@ export default async function UniversiteDetailPage({
 
       {/* Bottom CTA */}
       <div className="mt-16 bg-secondary/30 px-6 py-12 text-center">
-        <p className="text-lg font-semibold text-[var(--primary)]">
-          Trouve une bourse pour étudier ici
-        </p>
-        <Button
-          asChild
-          className="mt-4 bg-[var(--primary)] text-white hover:bg-[var(--primary)]/90"
-        >
-          <Link href="/bourses">Explorer les bourses</Link>
+        <p className="text-lg font-semibold text-[var(--primary)]">{t("findScholarship")}</p>
+        <Button asChild className="mt-4 bg-[var(--primary)] text-white hover:bg-[var(--primary)]/90">
+          <Link href="/bourses">{t("exploreScholarships")}</Link>
         </Button>
       </div>
     </div>

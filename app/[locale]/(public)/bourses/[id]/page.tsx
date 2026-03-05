@@ -6,11 +6,8 @@ import { Button } from "@/components/ui/button";
 import { SaveButton } from "@/components/save-button";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
-
-const levelLabels: Record<string, string> = {
-  BACHELOR: "Licence", MASTER: "Master", DOCTORAT: "Doctorat",
-  FELLOWSHIP: "Fellowship", SECONDARY: "Secondaire",
-};
+import { getTranslations } from "next-intl/server";
+import { getLocale } from "next-intl/server";
 
 const countryFlags: Record<string, string> = {
   "France": "🇫🇷", "Germany": "🇩🇪", "United Kingdom": "🇬🇧", "UK": "🇬🇧",
@@ -34,25 +31,15 @@ function getFlag(country: string): string {
   return countryFlags[country] ?? "🌍";
 }
 
-function formatDeadline(date: Date | null): string {
-  if (!date) return "Non précisée";
-  return new Date(date).toLocaleDateString("fr-FR", {
-    day: "numeric", month: "long", year: "numeric",
-  });
-}
-
-function formatAmount(amount: number | null, currency: string, isFullFunding: boolean): string | null {
-  if (isFullFunding) return "Entièrement financée";
-  if (!amount) return null;
-  return `${amount.toLocaleString()} ${currency}`;
-}
-
 export default async function BourseDetailPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  const t = await getTranslations("bourseDetail");
+  const tCommon = await getTranslations("common");
+  const locale = await getLocale();
 
   const s = await prisma.scholarship.findUnique({ where: { id } });
   if (!s) notFound();
@@ -68,9 +55,19 @@ export default async function BourseDetailPage({
   }
 
   const flag = getFlag(s.country);
-  const levels = s.academicLevels.map((l) => levelLabels[l] ?? l).join(", ");
-  const deadline = formatDeadline(s.deadline);
-  const amount = formatAmount(s.amount, s.currency, s.isFullFunding);
+  const levels = s.academicLevels
+    .map((l) => tCommon(`levels.${l}` as Parameters<typeof tCommon>[0]) ?? l)
+    .join(", ");
+
+  const deadline = s.deadline
+    ? new Date(s.deadline).toLocaleDateString(locale, { day: "numeric", month: "long", year: "numeric" })
+    : tCommon("deadlineUnknown");
+
+  const amount = s.isFullFunding
+    ? tCommon("fullFunding")
+    : s.amount
+    ? `${s.amount.toLocaleString()} ${s.currency}`
+    : null;
 
   return (
     <div className="flex flex-col">
@@ -82,11 +79,11 @@ export default async function BourseDetailPage({
             className="inline-flex items-center gap-1.5 text-sm text-white/60 hover:text-white transition-colors mb-4"
           >
             <ArrowLeft size={14} />
-            Toutes les bourses
+            {t("backToAll")}
           </Link>
           <div className="flex flex-wrap items-start gap-3 mb-3">
             <Badge className="bg-white/20 text-white border-0">
-              {s.isFullFunding ? "Entièrement financée" : "Bourse"}
+              {s.isFullFunding ? tCommon("fullFunding") : tCommon("scholarship")}
             </Badge>
           </div>
           <h1 className="text-3xl font-bold leading-snug max-w-3xl">{s.name}</h1>
@@ -102,7 +99,7 @@ export default async function BourseDetailPage({
             {/* Quick stats card */}
             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 grid grid-cols-2 sm:grid-cols-4 gap-4">
               <div>
-                <p className="text-xs text-slate-500 mb-1">Pays</p>
+                <p className="text-xs text-slate-500 mb-1">{tCommon("country")}</p>
                 <p className="font-semibold text-slate-800 flex items-center gap-1">
                   <MapPin size={13} className="text-[var(--orange)]" />
                   {flag} {s.country}
@@ -110,7 +107,7 @@ export default async function BourseDetailPage({
               </div>
               {levels && (
                 <div>
-                  <p className="text-xs text-slate-500 mb-1">Niveau</p>
+                  <p className="text-xs text-slate-500 mb-1">{tCommon("level")}</p>
                   <p className="font-semibold text-slate-800 flex items-center gap-1">
                     <GraduationCap size={13} className="text-[var(--orange)]" />
                     {levels}
@@ -118,7 +115,7 @@ export default async function BourseDetailPage({
                 </div>
               )}
               <div>
-                <p className="text-xs text-slate-500 mb-1">Date limite</p>
+                <p className="text-xs text-slate-500 mb-1">{tCommon("deadline")}</p>
                 <p className="font-semibold text-slate-800 flex items-center gap-1">
                   <CalendarDays size={13} className="text-[var(--orange)]" />
                   {deadline}
@@ -126,7 +123,7 @@ export default async function BourseDetailPage({
               </div>
               {amount && (
                 <div>
-                  <p className="text-xs text-slate-500 mb-1">Montant</p>
+                  <p className="text-xs text-slate-500 mb-1">{t("amount")}</p>
                   <p className="font-semibold text-slate-800 flex items-center gap-1">
                     <Banknote size={13} className="text-[var(--orange)]" />
                     {amount}
@@ -137,9 +134,7 @@ export default async function BourseDetailPage({
 
             {/* Description */}
             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-              <h2 className="text-lg font-bold text-[var(--primary)] mb-3">
-                À propos de cette bourse
-              </h2>
+              <h2 className="text-lg font-bold text-[var(--primary)] mb-3">{t("about")}</h2>
               <p className="text-slate-600 leading-relaxed">{s.description}</p>
             </div>
 
@@ -148,7 +143,7 @@ export default async function BourseDetailPage({
               <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
                 <h2 className="text-lg font-bold text-[var(--primary)] mb-3 flex items-center gap-2">
                   <BookOpen size={18} className="text-[var(--orange)]" />
-                  Filières concernées
+                  {t("fields")}
                 </h2>
                 <div className="flex flex-wrap gap-2">
                   {s.fields.map((field) => (
@@ -163,9 +158,7 @@ export default async function BourseDetailPage({
             {/* Requirements */}
             {s.requirements && (
               <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-                <h2 className="text-lg font-bold text-[var(--primary)] mb-3">
-                  Conditions d&apos;éligibilité
-                </h2>
+                <h2 className="text-lg font-bold text-[var(--primary)] mb-3">{t("requirements")}</h2>
                 <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line">
                   {s.requirements}
                 </p>
@@ -177,59 +170,46 @@ export default async function BourseDetailPage({
           <div className="space-y-4">
             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sticky top-20">
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-4">
-                Postuler
+                {t("apply")}
               </p>
 
               <div className="space-y-3 mb-6 text-sm text-slate-600">
                 <div className="flex justify-between">
-                  <span>Date limite</span>
+                  <span>{tCommon("deadline")}</span>
                   <span className="font-semibold text-slate-800">{deadline}</span>
                 </div>
                 {amount && (
                   <div className="flex justify-between">
-                    <span>Montant</span>
+                    <span>{t("amount")}</span>
                     <span className="font-semibold text-slate-800">{amount}</span>
                   </div>
                 )}
                 <div className="flex justify-between">
-                  <span>Type</span>
+                  <span>{t("type")}</span>
                   <span className="font-semibold text-slate-800">
-                    {s.isFullFunding ? "Entièrement financée" : "Bourse"}
+                    {s.isFullFunding ? tCommon("fullFunding") : tCommon("scholarship")}
                   </span>
                 </div>
               </div>
 
               {s.link ? (
                 <>
-                  <Button
-                    asChild
-                    className="w-full bg-[var(--primary)] text-white hover:bg-[var(--primary)]/90"
-                  >
-                    <a
-                      href={s.link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center justify-center gap-2"
-                    >
-                      Postuler maintenant
+                  <Button asChild className="w-full bg-[var(--primary)] text-white hover:bg-[var(--primary)]/90">
+                    <a href={s.link} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2">
+                      {t("applyNow")}
                       <ExternalLink size={14} />
                     </a>
                   </Button>
-                  <p className="mt-4 text-center text-xs text-slate-400">
-                    Mibegnon ne gère pas les candidatures directement.
-                    Tu seras redirigé vers le site officiel.
-                  </p>
+                  <p className="mt-4 text-center text-xs text-slate-400">{t("applyDisclaimer")}</p>
                 </>
               ) : (
-                <p className="text-center text-sm text-slate-500 py-2">
-                  Yapa un lien direct actu mais on va gerer ça dès que possible 🙏
-                </p>
+                <p className="text-center text-sm text-slate-500 py-2">{t("noLink")}</p>
               )}
 
               <div className="mt-3 flex items-center gap-2">
                 <SaveButton scholarshipId={s.id} isSaved={isSaved} />
                 <span className="text-xs text-slate-400">
-                  {isSaved ? "Sauvegardé dans tes favoris" : "Sauvegarder dans tes favoris"}
+                  {isSaved ? t("saved") : t("save")}
                 </span>
               </div>
             </div>
@@ -239,11 +219,9 @@ export default async function BourseDetailPage({
 
       {/* Bottom CTA */}
       <div className="mt-16 bg-secondary/30 px-6 py-12 text-center">
-        <p className="text-lg font-semibold text-[var(--primary)]">
-          Explore d&apos;autres bourses
-        </p>
+        <p className="text-lg font-semibold text-[var(--primary)]">{t("exploreMore")}</p>
         <Button asChild className="mt-4 bg-[var(--primary)] text-white hover:bg-[var(--primary)]/90">
-          <Link href="/bourses">Voir toutes les bourses</Link>
+          <Link href="/bourses">{t("viewAll")}</Link>
         </Button>
       </div>
     </div>
