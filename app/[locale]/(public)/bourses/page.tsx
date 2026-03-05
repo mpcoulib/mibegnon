@@ -34,7 +34,12 @@ export default async function BoursesPage({
       : {}),
   };
 
-  const raw = await prisma.scholarship.findMany({ where });
+  let raw: Awaited<ReturnType<typeof prisma.scholarship.findMany>> = [];
+  try {
+    raw = await prisma.scholarship.findMany({ where });
+  } catch {
+    // DB unreachable — page still renders with empty list
+  }
 
   function shuffle<T>(arr: T[]): T[] {
     const a = [...arr];
@@ -53,11 +58,15 @@ export default async function BoursesPage({
   const { data: { user } } = await supabase.auth.getUser();
   let savedIds: string[] = [];
   if (user) {
-    const saved = await prisma.savedScholarship.findMany({
-      where: { userId: user.id },
-      select: { scholarshipId: true },
-    });
-    savedIds = saved.map((s: { scholarshipId: string }) => s.scholarshipId);
+    try {
+      const saved = await prisma.savedScholarship.findMany({
+        where: { userId: user.id },
+        select: { scholarshipId: true },
+      });
+      savedIds = saved.map((s: { scholarshipId: string }) => s.scholarshipId);
+    } catch {
+      // DB unreachable — continue without saved IDs
+    }
   }
 
   const tCommon = await getTranslations("common");

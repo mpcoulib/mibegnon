@@ -26,10 +26,15 @@ export default async function UniversitesPage({
       : {}),
   };
 
-  const universities = await prisma.university.findMany({
-    where,
-    orderBy: { ranking: "asc" },
-  });
+  let universities: Awaited<ReturnType<typeof prisma.university.findMany>> = [];
+  try {
+    universities = await prisma.university.findMany({
+      where,
+      orderBy: { ranking: "asc" },
+    });
+  } catch {
+    // DB unreachable — page still renders with empty list
+  }
 
   return (
     <div className="flex flex-col">

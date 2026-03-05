@@ -11,11 +11,16 @@ import { getTranslations } from "next-intl/server";
 export default async function HomePage() {
   const t = await getTranslations("home");
 
-  const featuredScholarships = await prisma.scholarship.findMany({
-    where: { isActive: true, isTranslated: true },
-    orderBy: { createdAt: "desc" },
-    take: 3,
-  });
+  let featuredScholarships: Awaited<ReturnType<typeof prisma.scholarship.findMany>> = [];
+  try {
+    featuredScholarships = await prisma.scholarship.findMany({
+      where: { isActive: true, isTranslated: true },
+      orderBy: { createdAt: "desc" },
+      take: 3,
+    });
+  } catch {
+    // DB unreachable (e.g. Supabase project paused) — page still renders without featured scholarships
+  }
 
   const steps = [
     { step: 1, icon: User, title: t("step1Title"), desc: t("step1Desc") },
