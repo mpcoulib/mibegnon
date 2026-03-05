@@ -149,7 +149,7 @@ export default function Navbar({ user }: { user: User | null }) {
           <div className="mt-3 pt-3 border-t border-slate-100 space-y-2">
             {/* Language switcher mobile */}
             <div className="flex items-center gap-2 px-3 py-1">
-              <span className="text-xs text-slate-400">Language:</span>
+              <span className="text-xs text-slate-400">Langue :</span>
               <button
                 onClick={() => { switchLocale("fr"); setIsOpen(false); }}
                 className={`text-xs px-2 py-0.5 rounded-full border transition-colors ${locale === "fr" ? "bg-[var(--primary)] text-white border-[var(--primary)]" : "border-slate-200 text-slate-500"}`}
