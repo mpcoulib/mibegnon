@@ -5,6 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { SaveButton } from "@/components/save-button";
 import type { Scholarship } from "@prisma/client";
+
+type ScholarshipCardData = Pick<Scholarship, "id" | "name" | "provider" | "country" | "academicLevels" | "deadline" | "isFullFunding" | "category">;
 import { categoryInfo } from "@/lib/category-info";
 import { Globe2 } from "lucide-react";
 import { getCountryPath } from "@/lib/country-map";
@@ -45,7 +47,7 @@ export function ScholarshipCard({
   featured = false,
   isSaved = false,
 }: {
-  scholarship: Scholarship;
+  scholarship: ScholarshipCardData;
   featured?: boolean;
   isSaved?: boolean;
 }) {
@@ -56,7 +58,13 @@ export function ScholarshipCard({
   const flag = getFlag(s.country);
   const urgent = isUrgent(s.deadline);
   const levels = s.academicLevels
-    .map((l) => tCommon(`levels.${l}` as Parameters<typeof tCommon>[0]) ?? l)
+    .map((l) => {
+      try {
+        return tCommon(`levels.${l}` as Parameters<typeof tCommon>[0]);
+      } catch {
+        return l;
+      }
+    })
     .join(", ");
   const cat = s.category ? categoryInfo[s.category] : null;
 

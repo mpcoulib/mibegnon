@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { Suspense } from "react";
 import { getTranslations } from "next-intl/server";
 
+export const revalidate = 3600; // revalidate cached page every hour
+
 export default async function UniversitesPage({
   searchParams,
 }: {

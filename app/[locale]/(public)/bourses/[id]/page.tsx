@@ -9,6 +9,8 @@ import { prisma } from "@/lib/prisma";
 import { getTranslations } from "next-intl/server";
 import { getLocale } from "next-intl/server";
 
+export const revalidate = 3600; // revalidate cached page every hour
+
 const countryFlags: Record<string, string> = {
   "France": "🇫🇷", "Germany": "🇩🇪", "United Kingdom": "🇬🇧", "UK": "🇬🇧",
   "USA": "🇺🇸", "United States": "🇺🇸", "Canada": "🇨🇦", "Australia": "🇦🇺",
@@ -56,7 +58,13 @@ export default async function BourseDetailPage({
 
   const flag = getFlag(s.country);
   const levels = s.academicLevels
-    .map((l) => tCommon(`levels.${l}` as Parameters<typeof tCommon>[0]) ?? l)
+    .map((l) => {
+      try {
+        return tCommon(`levels.${l}` as Parameters<typeof tCommon>[0]);
+      } catch {
+        return l;
+      }
+    })
     .join(", ");
 
   const deadline = s.deadline

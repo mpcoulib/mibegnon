@@ -73,6 +73,8 @@ model Scholarship {
   bookmarks    Bookmark[]
   applications Application[]
 
+  @@index([isActive, ivoirianEligible, isTranslated])
+  @@index([category])
   @@map("scholarships")
 }
 

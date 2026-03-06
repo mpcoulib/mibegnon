@@ -16,7 +16,9 @@
       "MASTER": "Master",
       "DOCTORAT": "PhD",
       "FELLOWSHIP": "Fellowship",
-      "SECONDARY": "Secondary"
+      "SECONDARY": "Secondary",
+      "INTERNSHIP": "Internship",
+      "DIPLOMA": "Diploma"
     }
   },
   "nav": {

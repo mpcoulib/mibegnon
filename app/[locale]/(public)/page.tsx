@@ -8,15 +8,23 @@ import { prisma } from "@/lib/prisma";
 import { ScholarshipCard } from "@/components/scholarship-card";
 import { getTranslations } from "next-intl/server";
 
+export const revalidate = 3600; // revalidate cached page every hour
+
 export default async function HomePage() {
   const t = await getTranslations("home");
 
-  let featuredScholarships: Awaited<ReturnType<typeof prisma.scholarship.findMany>> = [];
+  const cardSelect = {
+    id: true, name: true, provider: true, country: true,
+    academicLevels: true, deadline: true, isFullFunding: true, category: true,
+  } as const;
+
+  let featuredScholarships: Awaited<ReturnType<typeof prisma.scholarship.findMany<{ select: typeof cardSelect }>>> = [];
   try {
     featuredScholarships = await prisma.scholarship.findMany({
       where: { isActive: true, isTranslated: true },
       orderBy: { createdAt: "desc" },
       take: 3,
+      select: cardSelect,
     });
   } catch {
     // DB unreachable (e.g. Supabase project paused) — page still renders without featured scholarships

@@ -6,6 +6,8 @@ import { prisma } from "@/lib/prisma";
 import { categoryInfo } from "@/lib/category-info";
 import { getTranslations } from "next-intl/server";
 
+export const revalidate = 3600; // revalidate cached page every hour
+
 export default async function BoursesPage({
   searchParams,
 }: {
@@ -34,9 +36,14 @@ export default async function BoursesPage({
       : {}),
   };
 
-  let raw: Awaited<ReturnType<typeof prisma.scholarship.findMany>> = [];
+  const cardSelect = {
+    id: true, name: true, provider: true, country: true,
+    academicLevels: true, deadline: true, isFullFunding: true, category: true,
+  } as const;
+
+  let raw: Awaited<ReturnType<typeof prisma.scholarship.findMany<{ select: typeof cardSelect }>>> = [];
   try {
-    raw = await prisma.scholarship.findMany({ where });
+    raw = await prisma.scholarship.findMany({ where, select: cardSelect });
   } catch {
     // DB unreachable — page still renders with empty list
   }
