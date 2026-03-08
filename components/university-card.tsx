@@ -2,7 +2,7 @@ import Link from "next/link";
 import { MapPin, Trophy, BookOpen, Globe2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import type { University } from "@prisma/client";
+import type { University } from "@/lib/mock-data";
 
 const countryFlags: Record<string, string> = {
   "France": "🇫🇷", "Germany": "🇩🇪", "Allemagne": "🇩🇪",

@@ -13,18 +13,13 @@ export const revalidate = 3600; // revalidate cached page every hour
 export default async function HomePage() {
   const t = await getTranslations("home");
 
-  const cardSelect = {
-    id: true, name: true, provider: true, country: true,
-    academicLevels: true, deadline: true, isFullFunding: true, category: true,
-  } as const;
-
-  let featuredScholarships: Awaited<ReturnType<typeof prisma.scholarship.findMany<{ select: typeof cardSelect }>>> = [];
+  let featuredScholarships: { id: string; name: string; provider: string; country: string; academicLevels: string[]; deadline: Date | null; isFullFunding: boolean; category: string | null }[] = [];
   try {
     featuredScholarships = await prisma.scholarship.findMany({
       where: { isActive: true, isTranslated: true },
       orderBy: { createdAt: "desc" },
       take: 3,
-      select: cardSelect,
+      select: { id: true, name: true, provider: true, country: true, academicLevels: true, deadline: true, isFullFunding: true, category: true },
     });
   } catch {
     // DB unreachable (e.g. Supabase project paused) — page still renders without featured scholarships

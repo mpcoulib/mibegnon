@@ -1,6 +1,6 @@
 import { UniversityCard } from "@/components/university-card";
 import { UniversitesFilters } from "@/components/universites-filters";
-import { prisma } from "@/lib/prisma";
+import { universities as allUniversities } from "@/lib/mock-data";
 import { Suspense } from "react";
 import { getTranslations } from "next-intl/server";
 
@@ -15,27 +15,15 @@ export default async function UniversitesPage({
   const tCommon = await getTranslations("common");
   const params = await searchParams;
 
-  const where: object = {
-    isActive: true,
-    ...(params.pays ? { country: params.pays } : {}),
-    ...(params.q
-      ? {
-          OR: [
-            { name: { contains: params.q, mode: "insensitive" } },
-            { country: { contains: params.q, mode: "insensitive" } },
-          ],
-        }
-      : {}),
-  };
-
-  let universities: Awaited<ReturnType<typeof prisma.university.findMany>> = [];
-  try {
-    universities = await prisma.university.findMany({
-      where,
-      orderBy: { ranking: "asc" },
-    });
-  } catch {
-    // DB unreachable — page still renders with empty list
+  let universities = allUniversities;
+  if (params.pays) {
+    universities = universities.filter((u) => u.country === params.pays);
+  }
+  if (params.q) {
+    const q = params.q.toLowerCase();
+    universities = universities.filter(
+      (u) => u.name.toLowerCase().includes(q) || u.country.toLowerCase().includes(q)
+    );
   }
 
   return (

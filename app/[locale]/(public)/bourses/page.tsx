@@ -36,16 +36,14 @@ export default async function BoursesPage({
       : {}),
   };
 
-  const cardSelect = {
-    id: true, name: true, provider: true, country: true,
-    academicLevels: true, deadline: true, isFullFunding: true, category: true,
-  } as const;
-
-  let raw: Awaited<ReturnType<typeof prisma.scholarship.findMany<{ select: typeof cardSelect }>>> = [];
+  let raw: { id: string; name: string; provider: string; country: string; academicLevels: string[]; deadline: Date | null; isFullFunding: boolean; category: string | null }[] = [];
   try {
-    raw = await prisma.scholarship.findMany({ where, select: cardSelect });
-  } catch {
-    // DB unreachable — page still renders with empty list
+    raw = await prisma.scholarship.findMany({
+      where,
+      select: { id: true, name: true, provider: true, country: true, academicLevels: true, deadline: true, isFullFunding: true, category: true },
+    });
+  } catch (err) {
+    console.error("DB error on /bourses:", err);
   }
 
   function shuffle<T>(arr: T[]): T[] {
