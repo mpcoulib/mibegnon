@@ -33,6 +33,7 @@ interface ScholarshipExtraction {
   name: string;
   provider: string;
   country: string;
+  hostUniversity: string | null;
   amount: number | null;
   currency: string;
   isFullFunding: boolean;
@@ -69,6 +70,10 @@ const EXTRACT_TOOL: Anthropic.Tool = {
       country: {
         type: "string",
         description: "Country where the study/work takes place. E.g. 'Germany', 'USA'. Use 'International' if open to multiple countries.",
+      },
+      hostUniversity: {
+        type: "string",
+        description: "The specific university or institution where the scholarship holder studies. E.g. 'University of Cambridge', 'ETH Zürich'. Null if the scholarship is open to multiple universities or if not mentioned.",
       },
       amount: {
         type: "number",
@@ -208,19 +213,20 @@ async function upsertScholarship(
   const link     = data.applyLink ?? sourceLink;
 
   const payload = {
-    name:           data.name,
-    provider:       data.provider,
-    country:        data.country,
-    amount:         data.amount,
-    currency:       data.currency ?? "USD",
-    isFullFunding:  data.isFullFunding,
-    deadline:       deadline && !isNaN(deadline.getTime()) ? deadline : null,
-    academicLevels: data.academicLevels,
-    fields:         data.fields,
-    description:    data.description,
-    requirements:   data.requirements,
+    name:            data.name,
+    provider:        data.provider,
+    country:         data.country,
+    hostUniversity:  data.hostUniversity ?? null,
+    amount:          data.amount,
+    currency:        data.currency ?? "USD",
+    isFullFunding:   data.isFullFunding,
+    deadline:        deadline && !isNaN(deadline.getTime()) ? deadline : null,
+    academicLevels:  data.academicLevels,
+    fields:          data.fields,
+    description:     data.description,
+    requirements:    data.requirements,
     link,
-    isActive:       true,
+    isActive:        true,
   };
 
   const existing = await prisma.scholarship.findFirst({

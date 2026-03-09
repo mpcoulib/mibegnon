@@ -1,6 +1,7 @@
+
 import { UniversityCard } from "@/components/university-card";
 import { UniversitesFilters } from "@/components/universites-filters";
-import { universities as allUniversities } from "@/lib/mock-data";
+import { prisma } from "@/lib/prisma";
 import { Suspense } from "react";
 import { getTranslations } from "next-intl/server";
 
@@ -15,16 +16,27 @@ export default async function UniversitesPage({
   const tCommon = await getTranslations("common");
   const params = await searchParams;
 
-  let universities = allUniversities;
-  if (params.pays) {
-    universities = universities.filter((u) => u.country === params.pays);
-  }
-  if (params.q) {
-    const q = params.q.toLowerCase();
-    universities = universities.filter(
-      (u) => u.name.toLowerCase().includes(q) || u.country.toLowerCase().includes(q)
-    );
-  }
+const where: any= {
+  isActive: true,
+  ...(params.pays ? { country: params.pays } : {}),
+  ...(params.q ? {
+    OR: [
+      { name: { contains: params.q, mode: "insensitive" } },
+      { country: { contains: params.q, mode: "insensitive" } },
+    ],
+  } : {})
+
+};
+
+let universities: Awaited<ReturnType<typeof prisma.universityListing.findMany>> = [];
+try {
+  universities = await prisma.universityListing.findMany({
+    where,
+    orderBy: { ranking: "asc" },
+  });
+} catch (err) {
+  console.error("DB error on /universites:", err);
+}
 
   return (
     <div className="flex flex-col">

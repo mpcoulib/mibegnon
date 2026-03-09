@@ -54,6 +54,7 @@ model Scholarship {
   name           String
   provider       String
   country        String
+  hostUniversity String?
   amount         Float?
   currency       String    @default("USD")
   isFullFunding  Boolean   @default(false)
