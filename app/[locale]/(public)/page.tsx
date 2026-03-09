@@ -16,7 +16,7 @@ export default async function HomePage() {
   let featuredScholarships: { id: string; name: string; provider: string; country: string; academicLevels: string[]; deadline: Date | null; isFullFunding: boolean; category: string | null }[] = [];
   try {
     featuredScholarships = await prisma.scholarship.findMany({
-      where: { isActive: true, isTranslated: true },
+      where: { isActive: true },
       orderBy: { createdAt: "desc" },
       take: 3,
       select: { id: true, name: true, provider: true, country: true, academicLevels: true, deadline: true, isFullFunding: true, category: true },
