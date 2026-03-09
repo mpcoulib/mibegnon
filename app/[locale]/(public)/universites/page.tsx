@@ -55,7 +55,7 @@ try {
       <div className="mx-auto w-full max-w-6xl px-6 py-10">
         <Suspense fallback={<div className="h-24 rounded-xl bg-slate-100 animate-pulse" />}>
           <UniversitesFilters />
-        </Suspense>
+       </Suspense>
 
         <p className="mt-6 mb-4 text-sm text-slate-500">
           {t("found", { count: universities.length })}
